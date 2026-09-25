@@ -1,15 +1,40 @@
 workflows:
- ios-workflow:
-   name: GREEN
-   instance_type: mac_mini_m2
-   max_build_duration: 10
-   environment:
-     xcode: latest
-   scripts:
-     - name: Make Green
-       script: |
-         mkdir -p UHRI
-         echo "<h1>GREEN SUCCESS</h1>" > UHRI/index.html
-         echo "DONE"
-   artifacts:
-     - UHRI/index.html
+  ios-workflow:
+    name: UHRI Real App
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Install CocoaPods if needed
+        script: |
+          if [ -f "Podfile" ]; then
+            pod install
+          fi
+          if [ -f "UHRI/Podfile" ]; then
+            cd UHRI && pod install && cd ..
+          fi
+      - name: Build UHRI without signing
+        script: |
+          echo "Building UHRI.xcodeproj..."
+          mkdir -p build
+          # Try to build archive without code signing (for testing)
+          xcodebuild -project UHRI.xcodeproj -scheme UHRI -configuration Release clean archive -archivePath build/UHRI.xcarchive CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" -destination 'generic/platform=iOS' || \
+          xcodebuild -project UHRI.xcodeproj -scheme UHRI -configuration Release archive -archivePath build/UHRI.xcarchive CODE_SIGNING_ALLOWED=NO
+          echo "Build finished"
+          ls -lh build/
+          ls -lh build/UHRI.xcarchive/ 2>/dev/null || echo "No xcarchive yet"
+          # Create IPA folder from .app for artifact
+          APP_PATH=$(find build/UHRI.xcarchive -name "*.app" | head -n 1)
+          if [ -n "$APP_PATH" ]; then
+            mkdir -p build/ipa/Payload
+            cp -R "$APP_PATH" build/ipa/Payload/
+            cd build/ipa && zip -r UHRI-unsigned.ipa Payload && cd ../..
+            echo "Created unsigned IPA"
+          fi
+    artifacts:
+      - build/UHRI.xcarchive
+      - build/**/*.app
+      - build/ipa/*.ipa
+      - build/**/*.ipa
