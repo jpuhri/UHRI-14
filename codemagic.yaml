@@ -1,15 +1,16 @@
 workflows:
-  ios-workflow:
-    name: UHRI iOS 26
-    max_build_duration: 60
-    instance_type: mac_mini_m2
-    environment:
-      xcode: latest
-      cocoapods: default
-    scripts:
-      - name: Build with iOS 26 SDK
-        script: |
-          xcode-project build-ipa --project "UHRI.xcodeproj" --scheme "UHRI"
-    artifacts:
-      - build/ios/ipa/*.ipa
-      - /tmp/xcodebuild_logs/*.log
+ ios-workflow:
+   name: UHRI iOS 26
+   max_build_duration: 60
+   instance_type: mac_mini_m2
+   environment:
+     xcode: latest
+     cocoapods: default
+   scripts:
+     - name: Build with iOS 26 SDK
+       script: |
+         xcodebuild clean build -project "UHRI.xcodeproj" -scheme "UHRI" -sdk iphoneos -destination "generic/platform=iOS" CODE_SIGNING_ALLOWED=NO
+   artifacts:
+     - build/**/*.log
+Sent from my Patrick Uhri iPhone
+Repeal the 16th Amendment!
