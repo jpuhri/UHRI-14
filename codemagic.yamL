@@ -1,16 +1,18 @@
 workflows:
-  ios-workflow:
-    name: UHRI iOS 26
-    max_build_duration: 60
-    instance_type: mac_mini_m2
-    environment:
-      xcode: latest
-    scripts:
-      - name: Build with iOS 26 SDK
-        script: |
-          xcodebuild -version
-          xcodebuild -list -project "UHRI.xcodeproj"
-          echo "<html><body><h1>UHRI</h1></body></html>" > index.html
-          mkdir -p UHRI
-          echo "<html><body><h1>UHRI</h1></body></html>" > UHRI/index.html
-          xcodebuild clean build -project "UHRI.xcodeproj" -scheme "UHRI" -configuration Debug -sdk iphonesimulator -destination "platform=iOS Simulator,name=iPhone 16,OS=latest" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" AD_HOC_CODE_SIGNING_ALLOWED=YES || xcodebuild clean build -project "UHRI.xcodeproj" -configuration Debug -sdk iphonesimulator CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" AD_HOC_CODE_SIGNING_ALLOWED=YES
+ ios-workflow:
+   name: UHRI iOS 26
+   instance_type: mac_mini_m2
+   max_build_duration: 60
+   environment:
+     xcode: latest
+   scripts:
+     - name: Build iOS 26
+       script: |
+         xcodebuild -version
+         xcodebuild -list -project "UHRI.xcodeproj"
+         mkdir -p UHRI
+         echo "<html></html>" > UHRI/index.html
+         echo "<html></html>" > index.html
+         xcodebuild build -project "UHRI.xcodep
+Sent from my Patrick Uhri iPhone
+Repeal the 16th Amendment!
