@@ -8,16 +8,9 @@ workflows:
     scripts:
       - name: Build with iOS 26 SDK
         script: |
-          set -x
           xcodebuild -version
-          xcodebuild -showsdks | grep iOS
-          echo "=== Listing project info ==="
-          xcodebuild -list -project "UHRI.xcodeproj" || true
-          echo "=== Fixing missing web files ==="
+          xcodebuild -list -project "UHRI.xcodeproj"
           echo "<html><body><h1>UHRI</h1></body></html>" > index.html
           mkdir -p UHRI
           echo "<html><body><h1>UHRI</h1></body></html>" > UHRI/index.html
-          echo "=== Building for SIMULATOR without signing (code 65 fix) ==="
-          xcodebuild clean build             -project "UHRI.xcodeproj"             -scheme "UHRI"             -sdk iphonesimulator             -destination "platform=iOS Simulator,name=iPhone 16,OS=latest"             CODE_SIGNING_ALLOWED=NO             CODE_SIGNING_REQUIRED=NO             CODE_SIGN_IDENTITY=""             CODE_SIGN_ENTITLEMENTS=""             CODE_SIGNING_ALLOWS_MIXED_DIST_SIGNING=NO             AD_HOC_CODE_SIGNING_ALLOWED=YES             ONLY_ACTIVE_ARCH=NO ||           xcodebuild clean build             -project "UHRI.xcodeproj"             -alltargets             -sdk iphonesimulator             CODE_SIGNING_ALLOWED=NO             CODE_SIGNING_REQUIRED=NO             CODE_SIGN_IDENTITY=""             AD_HOC_CODE_SIGNING_ALLOWED=YES
-    artifacts:
-      - build/**/*.log
+          xcodebuild clean build -project "UHRI.xcodeproj" -scheme "UHRI" -configuration Debug -sdk iphonesimulator -destination "platform=iOS Simulator,name=iPhone 16,OS=latest" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" AD_HOC_CODE_SIGNING_ALLOWED=YES || xcodebuild clean build -project "UHRI.xcodeproj" -configuration Debug -sdk iphonesimulator CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" AD_HOC_CODE_SIGNING_ALLOWED=YES
