@@ -5,10 +5,11 @@ workflows:
    max_build_duration: 10
    environment:
      xcode: latest
-    scripts:
+   scripts:
      - name: Make Green
        script: |
          mkdir -p UHRI
          echo "<h1>GREEN SUCCESS</h1>" > UHRI/index.html
-    artifacts:
+         echo "DONE"
+   artifacts:
      - UHRI/index.html
