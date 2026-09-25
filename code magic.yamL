@@ -1,0 +1,25 @@
+workflows:
+ ios-workflow:
+   name: UHRI iOS 26
+   max_build_duration: 60
+   instance_type: mac_mini_m2
+   environment:
+     xcode: latest
+     cocoapods: default
+   scripts:
+     - name: Build with iOS 26 SDK
+       script: |
+         echo "Building with Xcode version:"
+         xcodebuild -version
+         echo "Available SDKs:"
+         xcodebuild -showsdks | grep -i ios
+         echo "Creating missing files if needed..."
+         echo "<html><body>UHRI</body></html>" > index.html || true
+         mkdir -p UHRI || true
+         echo "<html><body>UHRI</body></html>" > UHRI/index.html || true
+         touch index.html
+         touch UHRI/index.html || true
+         echo "Starting BUILD FOR SIMULATOR to avoid code signing..."
+         xcodebuild clean build -project "UHRI.xcodeproj" -scheme "UHRI" -sdk iphonesimulator -destination "generic/platform=iOS Simulator" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" -quiet || xcodebuild clean build -project "UHRI.xcodeproj" -scheme "UHRI" -sdk iphonesimulator CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
+   artifacts:
+     - build/**/*.log
