@@ -12,5 +12,3 @@ workflows:
          xcodebuild clean build -project "UHRI.xcodeproj" -scheme "UHRI" -sdk iphoneos -destination "generic/platform=iOS" CODE_SIGNING_ALLOWED=NO
    artifacts:
      - build/**/*.log
-Sent from my Patrick Uhri iPhone
-Repeal the 16th Amendment!
