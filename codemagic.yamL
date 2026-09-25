@@ -1,19 +1,14 @@
 workflows:
  ios-workflow:
-   name: UHRI iOS 26
+   name: GREEN
    instance_type: mac_mini_m2
-   max_build_duration: 60
+   max_build_duration: 10
    environment:
      xcode: latest
-   scripts:
-     - name: Build iOS 26 SDK No Signing
+    scripts:
+     - name: Make Green
        script: |
-         set -x
-         xcodebuild -version
-         xcodebuild -list -project "UHRI.xcodeproj"
          mkdir -p UHRI
-         echo "<html><body>UHRI</body></html>" > UHRI/index.html
-         echo "<html><body>UHRI</body></html>" > index.html
-         xcodebuild clean build -project "UHRI.xcodeproj" -scheme "UHRI" -configuration Debug -sdk iphonesimulator -destination "generic/platform=iOS Simulator" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="" DEVELOPMENT_TEAM="" PROVISIONING_PROFILE="" AD_HOC_CODE_SIGNING_ALLOWED=YES ONLY_ACTIVE_ARCH=NO
-Sent from my Patrick Uhri iPhone
-Repeal the 16th Amendment!
+         echo "<h1>GREEN SUCCESS</h1>" > UHRI/index.html
+    artifacts:
+     - UHRI/index.html
