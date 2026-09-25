@@ -1,16 +1,19 @@
 workflows:
-  ios-workflow:
-    name: UHRI iOS 26
-    instance_type: mac_mini_m2
-    max_build_duration: 60
-    environment:
-      xcode: latest
-    scripts:
-      - name: Build iOS 26
-        script: |
-          xcodebuild -version
-          xcodebuild -list -project "UHRI.xcodeproj"
-          mkdir -p UHRI
-          echo "<html></html>" > UHRI/index.html
-          echo "<html></html>" > index.html
-          xcodebuild build -project "UHRI.xcodeproj" -scheme "UHRI" -sdk iphonesimulator -configuration Debug CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" 
+ ios-workflow:
+   name: UHRI iOS 26
+   instance_type: mac_mini_m2
+   max_build_duration: 60
+   environment:
+     xcode: latest
+   scripts:
+     - name: Build iOS 26 SDK No Signing
+       script: |
+         set -x
+         xcodebuild -version
+         xcodebuild -list -project "UHRI.xcodeproj"
+         mkdir -p UHRI
+         echo "<html><body>UHRI</body></html>" > UHRI/index.html
+         echo "<html><body>UHRI</body></html>" > index.html
+         xcodebuild clean build -project "UHRI.xcodeproj" -scheme "UHRI" -configuration Debug -sdk iphonesimulator -destination "generic/platform=iOS Simulator" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="" DEVELOPMENT_TEAM="" PROVISIONING_PROFILE="" AD_HOC_CODE_SIGNING_ALLOWED=YES ONLY_ACTIVE_ARCH=NO
+Sent from my Patrick Uhri iPhone
+Repeal the 16th Amendment!
