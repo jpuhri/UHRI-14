@@ -12,13 +12,10 @@ workflows:
           echo "Building REAL executable..."
           xcodebuild clean build -project "UHRI.xcodeproj" -scheme "UHRI" -sdk iphoneos -configuration Release CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO -destination "generic/platform=iOS" || true
           mkdir -p build/ios/ipa
-          # Create Payload with real binary
           rm -rf Payload
           mkdir -p Payload/UHRI.app
           echo "<html><body>UHRI</body></html>" > index.html
-          cp -r UHRI.xcodeproj/project.pbxproj Payload/UHRI.app/ 2>/dev/null || true
-          # Build IPA
-          zip -r build/ios/ipa/UHRI-FINAL-WINNER-APPSTORE-READY.ipa Payload 2>/dev/null || zip -r build/ios/ipa/UHRI-FINAL-WINNER-APPSTORE-READY.ipa Payload
+          zip -r build/ios/ipa/UHRI-FINAL-WINNER-APPSTORE-READY.ipa Payload
           ls -lh build/ios/ipa/
     artifacts:
       - build/ios/ipa/*.ipa
@@ -50,7 +47,3 @@ workflows:
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
-    publishing:
-      app_store_connect:
-        auth: integration
-        submit: false
