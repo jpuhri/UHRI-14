@@ -13,23 +13,16 @@ workflows:
         XCODE_PROJECT: "UHRI.xcodeproj"
         XCODE_SCHEME: "UHRI"
     scripts:
-      - name: CREATE MISSING FILES - REAL BUNDLE com.uhri.app
+      - name: CREATE MISSING FILES
         script: |
-          echo "=== Bundle ID is com.uhri.app - YOUR REAL ID ==="
           cat > ContentView.swift << 'EOF'
           import SwiftUI
           struct ContentView: View {
               var body: some View {
                   VStack(spacing: 20) {
-                      Text("UHRI")
-                          .font(.system(size: 60, weight: .bold))
-                          .foregroundColor(.blue)
-                      Text("Home Inspection")
-                          .font(.title2)
-                      Text("✅ App Store Ready")
-                          .foregroundColor(.green)
-                      Text("com.uhri.app")
-                          .font(.caption)
+                      Text("UHRI").font(.system(size: 60, weight: .bold)).foregroundColor(.blue)
+                      Text("Home Inspection").font(.title2)
+                      Text("App Store Ready").foregroundColor(.green)
                       Spacer()
                   }.padding()
               }
@@ -39,52 +32,43 @@ workflows:
           import SwiftUI
           @main
           struct UHRIApp: App {
-              var body: some Scene {
-                  WindowGroup { ContentView() }
-              }
+              var body: some Scene { WindowGroup { ContentView() } }
           }
           EOF
-          echo '<html><body><h1>UHRI com.uhri.app</h1></body></html>' > index.html
-          ls -lh ContentView.swift UHRIApp.swift
-          echo "Project bundle:"
-          grep PRODUCT_BUNDLE_IDENTIFIER UHRI.xcodeproj/project.pbxproj | head -1
-      - name: Set up Apple signing for com.uhri.app - CREATE BOTH PROFILES
+          echo '<html><body>UHRI</body></html>' > index.html
+          echo "Files created, bundle is com.uhri.app"
+      - name: CREATE Bundle ID com.uhri.app if missing
         script: |
-          echo "Setting up signing for com.uhri.app - API Key H9RDSPQQ7F"
-          echo "=== Fetching APP STORE profile ==="
-          app-store-connect fetch-signing-files com.uhri.app --type IOS_APP_STORE --create || echo "App Store fetch tried"
-          echo "=== Fetching DEVELOPMENT profile (needed for archive) ==="
-          app-store-connect fetch-signing-files com.uhri.app --type IOS_APP_DEVELOPMENT --create || echo "Dev fetch tried"
-          echo "=== Fetching all profiles ==="
-          app-store-connect fetch-signing-files --type IOS_APP_STORE --create || true
-          app-store-connect fetch-signing-files --type IOS_APP_DEVELOPMENT --create || true
-          echo "=== Profiles on disk ==="
-          find ~/Library -name "*.mobileprovision" 2>/dev/null | head -20 || true
-          ls -lh ~/Library/MobileDevice/Provisioning\ Profiles/ 2>/dev/null || true
-          echo "=== Keychain ==="
+          echo "Creating Bundle ID com.uhri.app in Apple Developer Portal..."
+          app-store-connect bundle-ids create --identifier com.uhri.app --name UHRI --platform IOS || echo "Bundle ID already exists or creation attempted"
+          echo "Listing bundle IDs:"
+          app-store-connect bundle-ids list --identifier com.uhri.app || true
+      - name: Fetch signing files for com.uhri.app - NOW IT WILL WORK
+        script: |
+          echo "Fetching APP STORE profile for com.uhri.app..."
+          app-store-connect fetch-signing-files com.uhri.app --type IOS_APP_STORE --create
+          echo "Fetching DEVELOPMENT profile..."
+          app-store-connect fetch-signing-files com.uhri.app --type IOS_APP_DEVELOPMENT --create || true
+          echo "Profiles saved:"
+          ls -lh ~/Library/MobileDevice/Provisioning\ Profiles/ 2>/dev/null | head -20
           keychain initialize
           keychain add-certificates
-          echo "=== Applying profiles to Xcode ==="
           xcode-project use-profiles
-          echo "Done"
       - name: Build SIGNED IPA for com.uhri.app
         script: |
-          echo "Building IPA for com.uhri.app with allowProvisioningUpdates..."
-          xcode-project build-ipa --project "$XCODE_PROJECT" --scheme "$XCODE_SCHEME" --archive-flags "-allowProvisioningUpdates -allowProvisioningDeviceRegistration"
-          echo "=== IPA ==="
+          xcode-project build-ipa --project "$XCODE_PROJECT" --scheme "$XCODE_SCHEME" --archive-flags "-allowProvisioningUpdates"
           ls -lh build/ios/ipa/
-          find build -name "*.ipa" -ls || true
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
 
   ios-workflow:
-    name: BUILD 10 - DO NOT USE - OLD
+    name: BUILD 10 - DO NOT USE
     instance_type: mac_mini_m2
     environment:
       xcode: latest
     scripts:
       - name: DO NOT USE
         script: |
-          echo "Use SIGNED workflow for com.uhri.app"
+          echo "Use SIGNED workflow"
           exit 1
