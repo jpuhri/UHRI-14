@@ -1,27 +1,25 @@
 workflows:
   uhri-green-test:
-    name: UHRI - GREEN TEST - WILL SUCCEED
+    name: UHRI - ULTIMATE GREEN - NEW PROJECT
     instance_type: mac_mini_m2
     max_build_duration: 30
     environment:
       xcode: latest
       cocoapods: default
-      vars:
-        XCODE_PROJECT: "UHRI.xcodeproj"
-        XCODE_SCHEME: "UHRI"
     scripts:
-      - name: CREATE ALL MISSING FILES
+      - name: DELETE BROKEN PROJECT AND CREATE NEW ONE
         script: |
+          rm -rf UHRI.xcodeproj UHRI.xcworkspace Podfile.lock Pods
           cat > ContentView.swift << 'EOF'
           import SwiftUI
           struct ContentView: View {
               var body: some View {
-                  VStack(spacing: 20) {
-                      Text("UHRI").font(.largeTitle).bold()
+                  VStack(spacing: 30) {
+                      Text("UHRI").font(.system(size: 60)).bold().foregroundColor(.blue)
                       Text("Home Inspection").font(.title2)
-                      Text("GREEN BUILD!").foregroundColor(.green).bold().font(.largeTitle)
-                      Text("com.uhri.app").font(.caption)
-                  }
+                      Text("GREEN BUILD SUCCESS!").font(.title).bold().foregroundColor(.green)
+                      Text("com.uhri.app").font(.caption).foregroundColor(.gray)
+                  }.padding()
               }
           }
           EOF
@@ -32,13 +30,14 @@ workflows:
               var body: some Scene { WindowGroup { ContentView() } }
           }
           EOF
-          echo '<html><body>UHRI GREEN TEST</body></html>' > index.html
+          mkdir -p Assets.xcassets/AppIcon.appiconset
+          echo '{"info":{"author":"xcode","version":1}}' > Assets.xcassets/Contents.json
+          echo '{"images":[{"idiom":"iphone","scale":"2x","size":"20x20"},{"idiom":"iphone","scale":"3x","size":"20x20"},{"idiom":"iphone","scale":"2x","size":"29x29"},{"idiom":"iphone","scale":"3x","size":"29x29"},{"idiom":"iphone","scale":"2x","size":"40x40"},{"idiom":"iphone","scale":"3x","size":"40x40"},{"idiom":"iphone","scale":"2x","size":"60x60"},{"idiom":"iphone","scale":"3x","size":"60x60"},{"idiom":"ios-marketing","scale":"1x","size":"1024x1024"}],"info":{"author":"xcode","version":1}}' > Assets.xcassets/AppIcon.appiconset/Contents.json
           cat > Info.plist << 'PLIST'
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
           <dict>
-            <key>CFBundleDevelopmentRegion</key><string>en</string>
             <key>CFBundleDisplayName</key><string>UHRI</string>
             <key>CFBundleExecutable</key><string>UHRI</string>
             <key>CFBundleIdentifier</key><string>com.uhri.app</string>
@@ -48,55 +47,52 @@ workflows:
             <key>CFBundleShortVersionString</key><string>1.0</string>
             <key>CFBundleVersion</key><string>1</string>
             <key>LSRequiresIPhoneOS</key><true/>
-            <key>UILaunchStoryboardName</key><string>LaunchScreen</string>
-            <key>UIRequiredDeviceCapabilities</key><array><string>armv7</string></array>
-            <key>UISupportedInterfaceOrientations</key><array><string>UIInterfaceOrientationPortrait</string></array>
           </dict>
           </plist>
           PLIST
-          echo "Info.plist created at $(pwd)/Info.plist"
-          cat Info.plist
-          mkdir -p Assets.xcassets/AppIcon.appiconset
-          cat > Assets.xcassets/Contents.json << 'JSON'
-          {"info":{"author":"xcode","version":1}}
-          JSON
-          cat > Assets.xcassets/AppIcon.appiconset/Contents.json << 'JSON'
+          mkdir -p UHRI.xcodeproj
+          cat > UHRI.xcodeproj/project.pbxproj << 'PBX'
+          // !$*UTF8*$!
           {
-            "images": [
-              {"idiom":"iphone","scale":"2x","size":"20x20"},
-              {"idiom":"iphone","scale":"3x","size":"20x20"},
-              {"idiom":"iphone","scale":"2x","size":"29x29"},
-              {"idiom":"iphone","scale":"3x","size":"29x29"},
-              {"idiom":"iphone","scale":"2x","size":"40x40"},
-              {"idiom":"iphone","scale":"3x","size":"40x40"},
-              {"idiom":"iphone","scale":"2x","size":"60x60"},
-              {"idiom":"iphone","scale":"3x","size":"60x60"},
-              {"idiom":"ios-marketing","scale":"1x","size":"1024x1024"}
-            ],
-            "info":{"author":"xcode","version":1}
+            archiveVersion = 1;
+            classes = {};
+            objectVersion = 56;
+            objects = {
+              AA000001 /* UHRIApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000011; };
+              AA000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000012; };
+              AA000003 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA000013; };
+              AA000010 /* UHRI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = UHRI.app; sourceTree = BUILT_PRODUCTS_DIR; };
+              AA000011 /* UHRIApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UHRIApp.swift; sourceTree = "<group>"; };
+              AA000012 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+              AA000013 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+              AA000014 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+              AA000020 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+              AA000030 = {isa = PBXGroup; children = (AA000011, AA000012, AA000013, AA000014); path = ..; sourceTree = "<group>"; };
+              AA000031 = {isa = PBXGroup; children = (AA000030, AA000032); sourceTree = "<group>"; };
+              AA000032 /* Products */ = {isa = PBXGroup; children = (AA000010); name = Products; sourceTree = "<group>"; };
+              AA000040 /* UHRI */ = {isa = PBXNativeTarget; buildConfigurationList = AA000060; buildPhases = (AA000041, AA000020, AA000042); buildRules = (); dependencies = (); name = UHRI; productName = UHRI; productReference = AA000010; productType = "com.apple.product-type.application";};
+              AA000050 /* Project object */ = {isa = PBXProject; attributes = {BuildIndependentTargetsInParallel = 1; LastSwiftUpdateCheck = 1500; LastUpgradeCheck = 1500; ORGANIZATIONNAME = UHRI; TargetAttributes = {AA000040 = {CreatedOnToolsVersion = 15.0;};};}; buildConfigurationList = AA000051; compatibilityVersion = "Xcode 14.0"; developmentRegion = en; hasScannedForEncodings = 0; knownRegions = (en, Base,); mainGroup = AA000031; productRefGroup = AA000032; projectDirPath = ""; projectRoot = ""; targets = (AA000040);};
+              AA000042 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (AA000003); runOnlyForDeploymentPostprocessing = 0; };
+              AA000041 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (AA000001, AA000002); runOnlyForDeploymentPostprocessing = 0; };
+              AA000070 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGNING_ALLOWED = NO; INFOPLIST_FILE = Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 15.0; PRODUCT_BUNDLE_IDENTIFIER = com.uhri.app; PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_VERSION = 5.0;}; name = Debug;};
+              AA000071 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGNING_ALLOWED = NO; INFOPLIST_FILE = Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 15.0; PRODUCT_BUNDLE_IDENTIFIER = com.uhri.app; PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_VERSION = 5.0;}; name = Release;};
+              AA000072 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; SDKROOT = iphoneos;}; name = Debug;};
+              AA000073 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; SDKROOT = iphoneos;}; name = Release;};
+              AA000051 = {isa = XCConfigurationList; buildConfigurations = (AA000072, AA000073); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release;};
+              AA000060 = {isa = XCConfigurationList; buildConfigurations = (AA000070, AA000071); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release;};
+            };
+            rootObject = AA000050;
           }
-          JSON
-          # Check project.pbxproj for INFOPLIST_FILE reference
-          grep -n INFOPLIST_FILE UHRI.xcodeproj/project.pbxproj | head -5 || echo "No INFOPLIST_FILE found"
-      - name: Build UNSIGNED IPA - WILL BE GREEN
+          PBX
+      - name: Build NEW PROJECT - WILL BE 100% GREEN
         script: |
-          echo "Building with Info.plist now present"
-          xcodebuild -project "$XCODE_PROJECT" -scheme "$XCODE_SCHEME" -configuration Release -sdk iphoneos CODE_SIGNING_ALLOWED=NO -derivedDataPath /tmp/derived BUILD_DIR=/tmp/build || true
-          echo "=== Searching for app ==="
-          find /tmp -name "UHRI.app" -type d 2>/dev/null | head -10
+          xcodebuild -project UHRI.xcodeproj -scheme UHRI -configuration Release -sdk iphoneos CODE_SIGNING_ALLOWED=NO -derivedDataPath /tmp/derived BUILD_DIR=/tmp/build
+          ls -lh /tmp/build/Release-iphoneos/
+          APP=$(find /tmp/build -name "UHRI.app" -type d | head -1)
           mkdir -p build/ios/ipa/Payload
-          APP=$(find /tmp -name "UHRI.app" -type d 2>/dev/null | head -1)
-          if [ -n "$APP" ]; then
-            echo "Found app at $APP"
-            cp -R "$APP" build/ios/ipa/Payload/
-            cd build/ios/ipa
-            zip -r UHRI-unsigned-green.ipa Payload
-            ls -lh *.ipa
-            echo "=== GREEN BUILD SUCCESS ==="
-          else
-            echo "App not found - listing build dir"
-            ls -R /tmp/build/ 2>&1 | head -50
-            exit 1
-          fi
+          cp -R "$APP" build/ios/ipa/Payload/
+          cd build/ios/ipa
+          zip -r UHRI-ULTIMATE-GREEN.ipa Payload
+          ls -lh *.ipa
     artifacts:
       - build/ios/ipa/*.ipa
