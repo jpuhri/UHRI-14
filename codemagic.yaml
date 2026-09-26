@@ -19,12 +19,11 @@ workflows:
           import SwiftUI
           struct ContentView: View {
               var body: some View {
-                  VStack(spacing: 20) {
-                      Text("UHRI").font(.system(size: 60, weight: .bold)).foregroundColor(.blue)
-                      Text("Home Inspection").font(.title2)
-                      Text("App Store Ready").foregroundColor(.green)
-                      Spacer()
-                  }.padding()
+                  VStack {
+                      Text("UHRI").font(.largeTitle).bold()
+                      Text("Home Inspection")
+                      Text("com.uhri.app").font(.caption)
+                  }
               }
           }
           EOF
@@ -36,39 +35,25 @@ workflows:
           }
           EOF
           echo '<html><body>UHRI</body></html>' > index.html
-          echo "Files created, bundle is com.uhri.app"
-      - name: CREATE Bundle ID com.uhri.app if missing
+          echo "Files created"
+      - name: CREATE Bundle ID com.uhri.app
         script: |
-          echo "Creating Bundle ID com.uhri.app in Apple Developer Portal..."
-          app-store-connect bundle-ids create --identifier com.uhri.app --name UHRI --platform IOS || echo "Bundle ID already exists or creation attempted"
-          echo "Listing bundle IDs:"
-          app-store-connect bundle-ids list --identifier com.uhri.app || true
-      - name: Fetch signing files for com.uhri.app - NOW IT WILL WORK
+          echo "Attempting to create Bundle ID com.uhri.app..."
+          app-store-connect bundle-ids create --identifier com.uhri.app --name UHRI --platform IOS || echo "Bundle ID may already exist"
+          app-store-connect bundle-ids list | grep com.uhri || true
+      - name: Fetch signing files SIMPLE
         script: |
-          echo "Fetching APP STORE profile for com.uhri.app..."
+          echo "Fetching profile for com.uhri.app..."
           app-store-connect fetch-signing-files com.uhri.app --type IOS_APP_STORE --create
-          echo "Fetching DEVELOPMENT profile..."
-          app-store-connect fetch-signing-files com.uhri.app --type IOS_APP_DEVELOPMENT --create || true
-          echo "Profiles saved:"
-          ls -lh ~/Library/MobileDevice/Provisioning\ Profiles/ 2>/dev/null | head -20
+          ls ~/Library/MobileDevice/Provisioning\ Profiles/ || true
           keychain initialize
           keychain add-certificates
           xcode-project use-profiles
-      - name: Build SIGNED IPA for com.uhri.app
+      - name: Build SIGNED IPA SIMPLE
         script: |
-          xcode-project build-ipa --project "$XCODE_PROJECT" --scheme "$XCODE_SCHEME" --archive-flags "-allowProvisioningUpdates"
+          echo "Building IPA - SIMPLE COMMAND NO FLAGS..."
+          xcode-project build-ipa --project "$XCODE_PROJECT" --scheme "$XCODE_SCHEME"
           ls -lh build/ios/ipa/
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
-
-  ios-workflow:
-    name: BUILD 10 - DO NOT USE
-    instance_type: mac_mini_m2
-    environment:
-      xcode: latest
-    scripts:
-      - name: DO NOT USE
-        script: |
-          echo "Use SIGNED workflow"
-          exit 1
