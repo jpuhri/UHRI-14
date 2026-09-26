@@ -10,7 +10,7 @@ workflows:
         XCODE_PROJECT: "UHRI.xcodeproj"
         XCODE_SCHEME: "UHRI"
     scripts:
-      - name: CREATE MISSING FILES + FIX APP ICON
+      - name: CREATE ALL MISSING FILES
         script: |
           cat > ContentView.swift << 'EOF'
           import SwiftUI
@@ -33,104 +33,69 @@ workflows:
           }
           EOF
           echo '<html><body>UHRI GREEN TEST</body></html>' > index.html
-          echo "=== FIXING Assets.xcassets AppIcon ==="
+          cat > Info.plist << 'PLIST'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>CFBundleDevelopmentRegion</key><string>en</string>
+            <key>CFBundleDisplayName</key><string>UHRI</string>
+            <key>CFBundleExecutable</key><string>UHRI</string>
+            <key>CFBundleIdentifier</key><string>com.uhri.app</string>
+            <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
+            <key>CFBundleName</key><string>UHRI</string>
+            <key>CFBundlePackageType</key><string>APPL</string>
+            <key>CFBundleShortVersionString</key><string>1.0</string>
+            <key>CFBundleVersion</key><string>1</string>
+            <key>LSRequiresIPhoneOS</key><true/>
+            <key>UILaunchStoryboardName</key><string>LaunchScreen</string>
+            <key>UIRequiredDeviceCapabilities</key><array><string>armv7</string></array>
+            <key>UISupportedInterfaceOrientations</key><array><string>UIInterfaceOrientationPortrait</string></array>
+          </dict>
+          </plist>
+          PLIST
+          echo "Info.plist created at $(pwd)/Info.plist"
+          cat Info.plist
           mkdir -p Assets.xcassets/AppIcon.appiconset
           cat > Assets.xcassets/Contents.json << 'JSON'
-          {
-            "info" : {
-              "author" : "xcode",
-              "version" : 1
-            }
-          }
+          {"info":{"author":"xcode","version":1}}
           JSON
           cat > Assets.xcassets/AppIcon.appiconset/Contents.json << 'JSON'
           {
-            "images" : [
-              {
-                "idiom" : "iphone",
-                "scale" : "2x",
-                "size" : "20x20"
-              },
-              {
-                "idiom" : "iphone",
-                "scale" : "3x",
-                "size" : "20x20"
-              },
-              {
-                "idiom" : "iphone",
-                "scale" : "2x",
-                "size" : "29x29"
-              },
-              {
-                "idiom" : "iphone",
-                "scale" : "3x",
-                "size" : "29x29"
-              },
-              {
-                "idiom" : "iphone",
-                "scale" : "2x",
-                "size" : "40x40"
-              },
-              {
-                "idiom" : "iphone",
-                "scale" : "3x",
-                "size" : "40x40"
-              },
-              {
-                "idiom" : "iphone",
-                "scale" : "2x",
-                "size" : "60x60"
-              },
-              {
-                "idiom" : "iphone",
-                "scale" : "3x",
-                "size" : "60x60"
-              },
-              {
-                "idiom" : "ios-marketing",
-                "scale" : "1x",
-                "size" : "1024x1024"
-              }
+            "images": [
+              {"idiom":"iphone","scale":"2x","size":"20x20"},
+              {"idiom":"iphone","scale":"3x","size":"20x20"},
+              {"idiom":"iphone","scale":"2x","size":"29x29"},
+              {"idiom":"iphone","scale":"3x","size":"29x29"},
+              {"idiom":"iphone","scale":"2x","size":"40x40"},
+              {"idiom":"iphone","scale":"3x","size":"40x40"},
+              {"idiom":"iphone","scale":"2x","size":"60x60"},
+              {"idiom":"iphone","scale":"3x","size":"60x60"},
+              {"idiom":"ios-marketing","scale":"1x","size":"1024x1024"}
             ],
-            "info" : {
-              "author" : "xcode",
-              "version" : 1
-            }
+            "info":{"author":"xcode","version":1}
           }
           JSON
-          echo "Assets fixed"
-          ls -R Assets.xcassets
-      - name: Build UNSIGNED IPA - NO SIGNING - WILL BE GREEN
+          # Check project.pbxproj for INFOPLIST_FILE reference
+          grep -n INFOPLIST_FILE UHRI.xcodeproj/project.pbxproj | head -5 || echo "No INFOPLIST_FILE found"
+      - name: Build UNSIGNED IPA - WILL BE GREEN
         script: |
-          echo "Building UNSIGNED - No signing needed - Will be GREEN!"
-          xcodebuild -project "$XCODE_PROJECT" -scheme "$XCODE_SCHEME" -configuration Release -sdk iphoneos CODE_SIGNING_ALLOWED=NO -derivedDataPath /tmp/derived BUILD_DIR=/tmp/build CODE_SIGN_STYLE=Manual -allowProvisioningUpdates || true
-          echo "=== Build products ==="
-          ls -lh /tmp/build/Release-iphoneos/ 2>&1 | head -20
-          ls -lh /tmp/derived/Build/Products/Release-iphoneos/ 2>&1 | head -20
+          echo "Building with Info.plist now present"
+          xcodebuild -project "$XCODE_PROJECT" -scheme "$XCODE_SCHEME" -configuration Release -sdk iphoneos CODE_SIGNING_ALLOWED=NO -derivedDataPath /tmp/derived BUILD_DIR=/tmp/build || true
+          echo "=== Searching for app ==="
+          find /tmp -name "UHRI.app" -type d 2>/dev/null | head -10
           mkdir -p build/ios/ipa/Payload
-          if [ -d "/tmp/build/Release-iphoneos/UHRI.app" ]; then
-            echo "Found in /tmp/build"
-            cp -R /tmp/build/Release-iphoneos/UHRI.app build/ios/ipa/Payload/
-          elif [ -d "/tmp/derived/Build/Products/Release-iphoneos/UHRI.app" ]; then
-            echo "Found in /tmp/derived"
-            cp -R /tmp/derived/Build/Products/Release-iphoneos/UHRI.app build/ios/ipa/Payload/
-          else
-            echo "Searching for UHRI.app..."
-            find /tmp -name "UHRI.app" -type d 2>/dev/null | head -5
-            APP=$(find /tmp -name "UHRI.app" -type d 2>/dev/null | head -1)
-            if [ -n "$APP" ]; then
-              cp -R "$APP" build/ios/ipa/Payload/
-            fi
-          fi
-          ls -lh build/ios/ipa/Payload/ || echo "No Payload yet"
-          if [ -d "build/ios/ipa/Payload/UHRI.app" ]; then
+          APP=$(find /tmp -name "UHRI.app" -type d 2>/dev/null | head -1)
+          if [ -n "$APP" ]; then
+            echo "Found app at $APP"
+            cp -R "$APP" build/ios/ipa/Payload/
             cd build/ios/ipa
             zip -r UHRI-unsigned-green.ipa Payload
             ls -lh *.ipa
-            echo "=== GREEN BUILD SUCCESS! ==="
-            echo "IPA created at build/ios/ipa/UHRI-unsigned-green.ipa"
+            echo "=== GREEN BUILD SUCCESS ==="
           else
-            echo "Failed to find UHRI.app to package"
+            echo "App not found - listing build dir"
+            ls -R /tmp/build/ 2>&1 | head -50
             exit 1
           fi
     artifacts:
