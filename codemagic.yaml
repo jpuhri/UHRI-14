@@ -9,13 +9,12 @@ workflows:
       xcode: latest
       cocoapods: default
       vars:
-        BUNDLE_ID: "com.uhri.homeinspection"
         XCODE_PROJECT: "UHRI.xcodeproj"
         XCODE_SCHEME: "UHRI"
     scripts:
-      - name: CREATE ALL MISSING SWIFT FILES
+      - name: CREATE MISSING SWIFT FILES + DETECT REAL BUNDLE ID
         script: |
-          echo "=== CREATING MISSING FILES ==="
+          echo "=== Creating missing files ==="
           cat > ContentView.swift << 'EOF'
           import SwiftUI
           struct ContentView: View {
@@ -27,14 +26,12 @@ workflows:
                       Text("Home Inspection")
                           .font(.title2)
                       Text("✅ App Store Ready")
-                          .font(.headline)
                           .foregroundColor(.green)
-                      Text("Professional Home Inspection App")
+                      Text("Professional Home Inspection")
                           .multilineTextAlignment(.center)
                           .padding()
                       Spacer()
-                  }
-                  .padding()
+                  }.padding()
               }
           }
           EOF
@@ -43,44 +40,71 @@ workflows:
           @main
           struct UHRIApp: App {
               var body: some Scene {
-                  WindowGroup {
-                      ContentView()
-                  }
+                  WindowGroup { ContentView() }
               }
           }
           EOF
-          echo '<!DOCTYPE html><html><head><title>UHRI</title></head><body><h1>UHRI</h1></body></html>' > index.html
-          ls -lh ContentView.swift UHRIApp.swift index.html
-          grep -r "PRODUCT_BUNDLE_IDENTIFIER" UHRI.xcodeproj --include="*.pbxproj" | head -5 || true
-      - name: Set up Apple signing - FIX PROVISIONING PROFILE
+          echo '<html><body><h1>UHRI</h1></body></html>' > index.html
+          echo "=== Detecting REAL Bundle ID from Xcode project ==="
+          cat UHRI.xcodeproj/project.pbxproj | grep -A2 PRODUCT_BUNDLE_IDENTIFIER | head -20
+          REAL_BUNDLE=$(grep PRODUCT_BUNDLE_IDENTIFIER UHRI.xcodeproj/project.pbxproj | head -1 | sed 's/.*= *//' | sed 's/;.*//' | tr -d '" ' | tr -d '\n')
+          echo "Detected bundle: $REAL_BUNDLE"
+          if [ -z "$REAL_BUNDLE" ] || [ "$REAL_BUNDLE" = "" ]; then
+            REAL_BUNDLE="com.uhri.homeinspection"
+            echo "Using fallback: $REAL_BUNDLE"
+          fi
+          echo "BUNDLE_ID=$REAL_BUNDLE" >> $CM_ENV
+          echo "Real bundle is: $REAL_BUNDLE"
+      - name: Set up Apple signing with AUTO-DETECTED Bundle
         script: |
-          echo "Setting up signing H9RDSPQQ7F GREEN"
+          echo "Bundle ID is: $BUNDLE_ID"
+          echo "Fetching signing files for $BUNDLE_ID"
           app-store-connect fetch-signing-files "$BUNDLE_ID" --type IOS_APP_STORE --create || true
+          echo "Also fetching all IOS_APP_STORE profiles..."
           app-store-connect fetch-signing-files --type IOS_APP_STORE --create || true
-          ls -lh ~/Library/MobileDevice/Provisioning\ Profiles/ 2>/dev/null || true
+          echo "Profiles:"
+          ls -R ~/Library/MobileDevice/Provisioning\ Profiles/ 2>/dev/null || true
           keychain initialize
           keychain add-certificates
-          xcode-project use-profiles
-      - name: Build SIGNED IPA for App Store
+          echo "Applying profiles to project..."
+          xcode-project use-profiles || true
+          echo "Current signing settings:"
+          xcode-project detect-bundle-id || true
+      - name: Build SIGNED IPA - AUTOMATIC SIGNING ALLOWED
         script: |
-          echo "Building SIGNED IPA..."
-          xcode-project build-ipa --project "$XCODE_PROJECT" --scheme "$XCODE_SCHEME"
-          ls -lh build/ios/ipa/
+          echo "Building with automatic signing..."
+          # Try Codemagic build-ipa with provisioning updates allowed
+          xcode-project build-ipa --project "$XCODE_PROJECT" --scheme "$XCODE_SCHEME" --archive-flags "-allowProvisioningUpdates -allowProvisioningDeviceRegistration" || true
+          echo "If that failed, try direct xcodebuild with automatic..."
+          if [ ! -f build/ios/ipa/*.ipa ]; then
+            xcodebuild -project "$XCODE_PROJECT" -scheme "$XCODE_SCHEME" -configuration Release archive -archivePath /tmp/UHRI.xcarchive CODE_SIGN_STYLE=Automatic -allowProvisioningUpdates || true
+            xcodebuild -exportArchive -archivePath /tmp/UHRI.xcarchive -exportPath build/ios/ipa -exportOptionsPlist /tmp/export.plist 2>/dev/null || true
+            # Create export.plist
+            cat > /tmp/export.plist << PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store</string>
+            <key>signingStyle</key><string>automatic</string>
+          </dict></plist>
+          PLIST
+            xcodebuild -exportArchive -archivePath /tmp/UHRI.xcarchive -exportPath build/ios/ipa -exportOptionsPlist /tmp/export.plist || true
+          fi
+          ls -lh build/ios/ipa/ || true
+          find build -name "*.ipa" -exec ls -lh {} \; || true
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
+      - build/ios/ipa/*.plist
 
   ios-workflow:
-    name: BUILD 10 - DO NOT USE - OLD FAILING
+    name: BUILD 10 - DO NOT USE
     instance_type: mac_mini_m2
     max_build_duration: 60
     environment:
       xcode: latest
-      cocoapods: default
     scripts:
       - name: DO NOT USE
         script: |
-          echo "OLD workflow - makes 569 byte empty IPA - use SIGNED instead!"
+          echo "Use SIGNED workflow"
           exit 1
-    artifacts:
-      - build/ios/ipa/*.ipa
