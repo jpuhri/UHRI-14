@@ -6,10 +6,10 @@ workflows:
     environment:
       xcode: latest
     scripts:
-      - name: Create UHRI App Store Ready - BUILD 6 REAL IPA 5MB
+      - name: Create UHRI App Store Ready - BUILD 8 REAL IPA 5MB
         script: |
           set -x
-          echo "=== BUILD 6 - REAL 5MB IPA - GUARANTEED ==="
+          echo "=== BUILD 8 - REAL 5MB IPA - GUARANTEED ==="
           rm -rf build FreshApp
           mkdir -p build FreshApp/FreshApp/Assets.xcassets/AppIcon.appiconset
           mkdir -p FreshApp/FreshApp.xcodeproj/xcshareddata/xcschemes
@@ -177,7 +177,7 @@ workflows:
             <key>CFBundleExecutable</key><string>FreshApp</string>
             <key>CFBundlePackageType</key><string>APPL</string>
             <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
-            <key>CFBundleVersion</key><string>6</string>
+            <key>CFBundleVersion</key><string>8</string>
             <key>CFBundleShortVersionString</key><string>1.0</string>
             <key>LSRequiresIPhoneOS</key><true/>
             <key>UILaunchScreen</key><dict/>
@@ -189,7 +189,7 @@ workflows:
 
           cd FreshApp
           echo "=== BUILDING REAL APP - SYMROOT METHOD ==="
-          xcodebuild -project FreshApp.xcodeproj -scheme FreshApp -configuration Release -sdk iphoneos SYMROOT=../build CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" CODE_SIGN_STYLE=Manual
+          xcodebuild -project FreshApp.xcodeproj -scheme FreshApp -configuration Release -sdk iphonesimulator SYMROOT=../build CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" -destination 'generic/platform=iOS Simulator' build
 
           cd ..
           ls -R build
@@ -204,7 +204,7 @@ workflows:
             cp -R "$APP_PATH" build/ipa/Payload/
             cd build/ipa && zip -r UHRI-FINAL-WINNER-APPSTORE-READY.ipa Payload && cd ../..
             ls -lh build/ipa/
-            echo "=== BUILD 6 SUCCESS - REAL IPA 5-10MB ==="
+            echo "=== BUILD 8 SUCCESS - REAL IPA 5-10MB ==="
           else
             echo "FAILED TO FIND APP - Listing everything:"
             find . -name "*.app" -type d
