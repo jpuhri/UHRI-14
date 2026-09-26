@@ -10,7 +10,7 @@ workflows:
         XCODE_PROJECT: "UHRI.xcodeproj"
         XCODE_SCHEME: "UHRI"
     scripts:
-      - name: CREATE MISSING FILES
+      - name: CREATE MISSING FILES + FIX APP ICON
         script: |
           cat > ContentView.swift << 'EOF'
           import SwiftUI
@@ -19,7 +19,7 @@ workflows:
                   VStack(spacing: 20) {
                       Text("UHRI").font(.largeTitle).bold()
                       Text("Home Inspection").font(.title2)
-                      Text("This build WILL be green!").foregroundColor(.green).bold()
+                      Text("GREEN BUILD!").foregroundColor(.green).bold().font(.largeTitle)
                       Text("com.uhri.app").font(.caption)
                   }
               }
@@ -33,28 +33,105 @@ workflows:
           }
           EOF
           echo '<html><body>UHRI GREEN TEST</body></html>' > index.html
-          echo "Files created - now building UNSIGNED so no Apple key needed"
+          echo "=== FIXING Assets.xcassets AppIcon ==="
+          mkdir -p Assets.xcassets/AppIcon.appiconset
+          cat > Assets.xcassets/Contents.json << 'JSON'
+          {
+            "info" : {
+              "author" : "xcode",
+              "version" : 1
+            }
+          }
+          JSON
+          cat > Assets.xcassets/AppIcon.appiconset/Contents.json << 'JSON'
+          {
+            "images" : [
+              {
+                "idiom" : "iphone",
+                "scale" : "2x",
+                "size" : "20x20"
+              },
+              {
+                "idiom" : "iphone",
+                "scale" : "3x",
+                "size" : "20x20"
+              },
+              {
+                "idiom" : "iphone",
+                "scale" : "2x",
+                "size" : "29x29"
+              },
+              {
+                "idiom" : "iphone",
+                "scale" : "3x",
+                "size" : "29x29"
+              },
+              {
+                "idiom" : "iphone",
+                "scale" : "2x",
+                "size" : "40x40"
+              },
+              {
+                "idiom" : "iphone",
+                "scale" : "3x",
+                "size" : "40x40"
+              },
+              {
+                "idiom" : "iphone",
+                "scale" : "2x",
+                "size" : "60x60"
+              },
+              {
+                "idiom" : "iphone",
+                "scale" : "3x",
+                "size" : "60x60"
+              },
+              {
+                "idiom" : "ios-marketing",
+                "scale" : "1x",
+                "size" : "1024x1024"
+              }
+            ],
+            "info" : {
+              "author" : "xcode",
+              "version" : 1
+            }
+          }
+          JSON
+          echo "Assets fixed"
+          ls -R Assets.xcassets
       - name: Build UNSIGNED IPA - NO SIGNING - WILL BE GREEN
         script: |
-          echo "Building with CODE_SIGNING_ALLOWED=NO - This ALWAYS works!"
-          xcodebuild -project "$XCODE_PROJECT" -scheme "$XCODE_SCHEME" -configuration Release -sdk iphoneos CODE_SIGNING_ALLOWED=NO -derivedDataPath /tmp/derived BUILD_DIR=/tmp/build || true
+          echo "Building UNSIGNED - No signing needed - Will be GREEN!"
+          xcodebuild -project "$XCODE_PROJECT" -scheme "$XCODE_SCHEME" -configuration Release -sdk iphoneos CODE_SIGNING_ALLOWED=NO -derivedDataPath /tmp/derived BUILD_DIR=/tmp/build CODE_SIGN_STYLE=Manual -allowProvisioningUpdates || true
           echo "=== Build products ==="
-          ls -lh /tmp/build/Release-iphoneos/ || true
-          ls -lh /tmp/derived/Build/Products/Release-iphoneos/ || true
+          ls -lh /tmp/build/Release-iphoneos/ 2>&1 | head -20
+          ls -lh /tmp/derived/Build/Products/Release-iphoneos/ 2>&1 | head -20
           mkdir -p build/ios/ipa/Payload
-          # Try both locations
           if [ -d "/tmp/build/Release-iphoneos/UHRI.app" ]; then
+            echo "Found in /tmp/build"
             cp -R /tmp/build/Release-iphoneos/UHRI.app build/ios/ipa/Payload/
           elif [ -d "/tmp/derived/Build/Products/Release-iphoneos/UHRI.app" ]; then
+            echo "Found in /tmp/derived"
             cp -R /tmp/derived/Build/Products/Release-iphoneos/UHRI.app build/ios/ipa/Payload/
           else
-            find /tmp -name "UHRI.app" -type d | head -5
-            find /tmp -name "UHRI.app" -type d -exec cp -R {} build/ios/ipa/Payload/ \; | head -1 || true
+            echo "Searching for UHRI.app..."
+            find /tmp -name "UHRI.app" -type d 2>/dev/null | head -5
+            APP=$(find /tmp -name "UHRI.app" -type d 2>/dev/null | head -1)
+            if [ -n "$APP" ]; then
+              cp -R "$APP" build/ios/ipa/Payload/
+            fi
           fi
-          ls -lh build/ios/ipa/Payload/ || true
-          cd build/ios/ipa
-          zip -r UHRI-unsigned-green.ipa Payload
-          ls -lh *.ipa
-          echo "=== GREEN BUILD SUCCESS! ==="
+          ls -lh build/ios/ipa/Payload/ || echo "No Payload yet"
+          if [ -d "build/ios/ipa/Payload/UHRI.app" ]; then
+            cd build/ios/ipa
+            zip -r UHRI-unsigned-green.ipa Payload
+            ls -lh *.ipa
+            echo "=== GREEN BUILD SUCCESS! ==="
+            echo "IPA created at build/ios/ipa/UHRI-unsigned-green.ipa"
+          else
+            echo "Failed to find UHRI.app to package"
+            exit 1
+          fi
     artifacts:
       - build/ios/ipa/*.ipa
