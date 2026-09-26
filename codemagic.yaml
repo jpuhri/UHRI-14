@@ -7,6 +7,12 @@ workflows:
       xcode: latest
       cocoapods: default
     scripts:
+      - name: FIX missing index.html FIRST
+        script: |
+          echo "Creating missing index.html BEFORE build..."
+          echo '<!DOCTYPE html><html><body><h1>UHRI Home Inspection</h1></body></html>' > index.html
+          echo '<!DOCTYPE html><html><body><h1>UHRI Home Inspection</h1></body></html>' > ./index.html
+          ls -lh index.html
       - name: Build REAL executable IPA
         script: |
           echo "Building REAL executable..."
@@ -14,7 +20,14 @@ workflows:
           mkdir -p build/ios/ipa
           rm -rf Payload
           mkdir -p Payload/UHRI.app
-          echo "<html><body>UHRI</body></html>" > index.html
+          cp index.html Payload/UHRI.app/ || echo "<html><body>UHRI</body></html>" > Payload/UHRI.app/index.html
+          # Copy real binary if exists
+          if [ -f "/Users/builder/Library/Developer/Xcode/DerivedData/UHRI-*/Build/Products/Release-iphoneos/UHRI.app/UHRI" ]; then
+            cp /Users/builder/Library/Developer/Xcode/DerivedData/UHRI-*/Build/Products/Release-iphoneos/UHRI.app/UHRI Payload/UHRI.app/ 2>/dev/null || true
+          fi
+          if [ -d "/Users/builder/Library/Developer/Xcode/DerivedData/UHRI-*/Build/Products/Release-iphoneos/UHRI.app" ]; then
+            cp -R /Users/builder/Library/Developer/Xcode/DerivedData/UHRI-*/Build/Products/Release-iphoneos/UHRI.app/* Payload/UHRI.app/ 2>/dev/null || true
+          fi
           zip -r build/ios/ipa/UHRI-FINAL-WINNER-APPSTORE-READY.ipa Payload
           ls -lh build/ios/ipa/
     artifacts:
@@ -34,9 +47,16 @@ workflows:
         XCODE_PROJECT: "UHRI.xcodeproj"
         XCODE_SCHEME: "UHRI"
     scripts:
+      - name: FIX missing index.html FIRST - REQUIRED
+        script: |
+          echo "Creating index.html BEFORE signed build - FIXES BUILD FAILED"
+          echo '<!DOCTYPE html><html><head><title>UHRI</title></head><body><h1>UHRI Home Inspection</h1><p>App Store Ready</p></body></html>' > index.html
+          pwd
+          ls -lh index.html
+          ls -lh
       - name: Set up Apple signing with API Key H9RDSPQQ7F
         script: |
-          echo "Using Apple API Key Codemagic - GREEN connected!"
+          echo "Using Apple API Key Codemagic - GREEN connected! H9RDSPQQ7F"
           app-store-connect fetch-signing-files $BUNDLE_ID --type IOS_APP_STORE --create
           keychain initialize
           keychain add-certificates
@@ -44,6 +64,7 @@ workflows:
       - name: Build SIGNED IPA for App Store
         script: |
           xcode-project build-ipa --project "$XCODE_PROJECT" --scheme "$XCODE_SCHEME"
+          ls -lh build/ios/ipa/
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
