@@ -1,34 +1,29 @@
 workflows:
   UHRI FINAL SIGNED:
     name: UHRI FINAL SIGNED
-    max_build_duration: 60
     instance_type: mac_mini_m2
+    max_build_duration: 60
     integrations:
       app_store_connect: UHRis14 New Key
     environment:
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.uhri14.app
-      vars:
-        XCODE_WORKSPACE: "URLL.xcworkspace"
-        XCODE_SCHEME: "URLL"
-        BUNDLE_ID: "com.uhri14.app"
       xcode: latest
       cocoapods: default
-    triggering:
-      manual: true
+      vars:
+        BUNDLE_ID: "com.uhri14.app"
+        XCODE_WORKSPACE: "URLL.xcworkspace"
+        XCODE_SCHEME: "URLL"
     scripts:
-      - name: Set up code signing
+      - name: Fetch signing files
         script: |
-          app-store-connect fetch-signing-files "$BUNDLE_ID" --type IOS_APP_STORE --create
-      - name: Set up keychain and add certs
+          app-store-connect fetch-signing-files $BUNDLE_ID --type IOS_APP_STORE --create
+      - name: Set up keychain
         script: |
           keychain initialize
           keychain add-certificates
-      - name: Set up provisioning profiles
+      - name: Set up provisioning
         script: |
           xcode-project use-profiles
-      - name: Install Pods
+      - name: Install pods
         script: |
           cd ios && pod install --repo-update
       - name: Build IPA
@@ -39,5 +34,6 @@ workflows:
       - /tmp/xcodebuild_logs/*.log
     publishing:
       app_store_connect:
+        auth: integration
         api_key: UHRis14 New Key
         submit_to_testflight: true
