@@ -1,32 +1,32 @@
 workflows:
-  uhri-14-final:
-    name: UHRI-14 FINAL BUILD
+  uhri-green-simple:
+    name: UHRI GREEN SIMPLE
     instance_type: mac_mini_m2
-    max_build_duration: 60
-    integrations:
-      app_store_connect: UHRI-14 New Key
+    max_build_duration: 20
     environment:
       xcode: latest
     scripts:
-      - name: Create Bundle ID and Profile Automatically
-        script: |
-          keychain initialize
-          app-store-connect fetch-signing-files com.uhri.app --type IOS_APP_STORE --create
-          keychain add-certificates
-          xcode-project use-profiles
       - name: Create Project
         script: |
+          rm -rf UHRI.xcodeproj
           cat > UHRIApp.swift << 'SWIFT'
           import SwiftUI
           @main struct UHRIApp: App { var body: some Scene { WindowGroup { ContentView() } } }
           SWIFT
           cat > ContentView.swift << 'SWIFT'
           import SwiftUI
-          struct ContentView: View { var body: some View { Text("UHRI GREEN!").font(.largeTitle).bold().foregroundColor(.green) } }
+          struct ContentView: View { 
+            var body: some View { 
+              VStack {
+                Text("UHRI").font(.largeTitle).bold().foregroundColor(.green)
+                Text("BUILD 15 - GREEN").font(.title2)
+              }.padding()
+            } 
+          }
           SWIFT
           mkdir -p Assets.xcassets/AppIcon.appiconset
           echo '{"info":{"author":"xcode","version":1}}' > Assets.xcassets/Contents.json
-          echo '{"images":[]}' > Assets.xcassets/AppIcon.appiconset/Contents.json
+          echo '{"images":[{"idiom":"iphone","scale":"2x","size":"20x20"},{"idiom":"iphone","scale":"3x","size":"20x20"},{"idiom":"iphone","scale":"2x","size":"29x29"},{"idiom":"iphone","scale":"3x","size":"29x29"},{"idiom":"iphone","scale":"2x","size":"40x40"},{"idiom":"iphone","scale":"3x","size":"40x40"},{"idiom":"iphone","scale":"2x","size":"60x60"},{"idiom":"iphone","scale":"3x","size":"60x60"}]}' > Assets.xcassets/AppIcon.appiconset/Contents.json
           cat > Info.plist << 'PLIST'
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -36,7 +36,7 @@ workflows:
           <key>CFBundleExecutable</key><string>UHRI</string>
           <key>CFBundlePackageType</key><string>APPL</string>
           <key>CFBundleShortVersionString</key><string>1.0</string>
-          <key>CFBundleVersion</key><string>1</string>
+          <key>CFBundleVersion</key><string>15</string>
           <key>LSRequiresIPhoneOS</key><true/>
           </dict></plist>
           PLIST
@@ -55,24 +55,24 @@ workflows:
           D1 = {isa = PBXGroup; children = (D0, D2); sourceTree = "<group>"; };
           D2 = {isa = PBXGroup; children = (F0); name = Products; sourceTree = "<group>"; };
           T0 = {isa = PBXNativeTarget; buildConfigurationList = C1; buildPhases = (S0, BF, R0); buildRules = (); dependencies = (); name = UHRI; productName = UHRI; productReference = F0; productType = "com.apple.product-type.application"; };
-          P0 = {isa = PBXProject; attributes = {BuildIndependentTargetsInParallel = 1; LastSwiftUpdateCheck = 1500;}; buildConfigurationList = C0; compatibilityVersion = "Xcode 14.0"; developmentRegion = en; hasScannedForEncodings = 0; knownRegions = (en, Base); mainGroup = D1; productRefGroup = D2; projectDirPath = ""; projectRoot = ""; targets = (T0); };
+          P0 = {isa = PBXProject; attributes = {BuildIndependentTargetsInParallel = 1; LastSwiftUpdateCheck = 1500; ORGANIZATIONNAME = uhri; TargetAttributes = { T0 = { CreatedOnToolsVersion = 15.0; }; }; }; buildConfigurationList = C0; compatibilityVersion = "Xcode 14.0"; developmentRegion = en; hasScannedForEncodings = 0; knownRegions = (en, Base); mainGroup = D1; productRefGroup = D2; projectDirPath = ""; projectRoot = ""; targets = (T0); };
           R0 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (A3); runOnlyForDeploymentPostprocessing = 0; };
           S0 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A1, A2); runOnlyForDeploymentPostprocessing = 0; };
           C0 = {isa = XCConfigurationList; buildConfigurations = (C01, C02); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
           C1 = {isa = XCConfigurationList; buildConfigurations = (C11, C12); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
-          C01 = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO;}; name = Debug; };
-          C02 = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO;}; name = Release; };
-          C11 = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; INFOPLIST_FILE = Info.plist; PRODUCT_BUNDLE_IDENTIFIER = com.uhri.app; PRODUCT_NAME = UHRI; SWIFT_VERSION = 5.0; CODE_SIGN_STYLE = Automatic;}; name = Debug; };
-          C12 = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; INFOPLIST_FILE = Info.plist; PRODUCT_BUNDLE_IDENTIFIER = com.uhri.app; PRODUCT_NAME = UHRI; SWIFT_VERSION = 5.0; CODE_SIGN_STYLE = Automatic;}; name = Release; };
+          C01 = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ANALYZER_NONNULL = YES; CODE_SIGNING_ALLOWED = NO; }; name = Debug; };
+          C02 = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ANALYZER_NONNULL = YES; CODE_SIGNING_ALLOWED = NO; }; name = Release; };
+          C11 = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGNING_ALLOWED = NO; INFOPLIST_FILE = Info.plist; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks"; PRODUCT_BUNDLE_IDENTIFIER = com.uhri.app; PRODUCT_NAME = UHRI; SWIFT_VERSION = 5.0; }; name = Debug; };
+          C12 = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGNING_ALLOWED = NO; INFOPLIST_FILE = Info.plist; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks"; PRODUCT_BUNDLE_IDENTIFIER = com.uhri.app; PRODUCT_NAME = UHRI; SWIFT_VERSION = 5.0; }; name = Release; };
           }; rootObject = P0; }
           PBX
       - name: Build IPA
         script: |
-          xcode-project build-ipa --project UHRI.xcodeproj --target UHRI
+          xcodebuild -project UHRI.xcodeproj -target UHRI -configuration Release archive -archivePath build/UHRI.xcarchive CODE_SIGNING_ALLOWED=NO
+          mkdir -p build/ipa/Payload
+          cp -r build/UHRI.xcarchive/Products/Applications/UHRI.app build/ipa/Payload/
+          cd build/ipa && zip -r UHRI-GREEN-BUILD-15.ipa Payload
+          ls -lh UHRI-GREEN-BUILD-15.ipa
+          echo "GREEN BUILD SUCCESS!"
     artifacts:
-      - "build/ios/ipa/*.ipa"
-    publishing:
-      app_store_connect:
-        auth: integration
-        api_key: UHRI-14 New Key
-        submit_to_testflight: true
+      - "build/ipa/*.ipa"
