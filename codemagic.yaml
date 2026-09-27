@@ -8,12 +8,18 @@ workflows:
     scripts:
       - name: Build GREEN
         script: |
-          echo "Creating missing index.html"
+          echo "Fixing file locations for Xcode"
+          ls -la
+          ls -la UHRI/ || true
           echo "<html><body>UHRI</body></html>" > index.html
-          mkdir -p UHRI 2>/dev/null; echo "<html><body>UHRI</body></html>" > UHRI/index.html
-          find . -name "*.pbxproj" -exec grep -l "index.html" {} \; | while read proj; do dir=$(dirname "$proj"); echo "Project dir $dir"; echo "<html></html>" > "$dir/../index.html" 2>/dev/null || true; echo "<html></html>" > "$dir/index.html" 2>/dev/null || true; done
-          grep -R "index.html" . --include="*.pbxproj" -A2 -B2 || true
-          ls -la *.html 2>/dev/null; ls -la UHRI/*.html 2>/dev/null || true
+          echo "<html><body>UHRI</body></html>" > UHRI/index.html 2>/dev/null || true
+          
+          if [ -d "UHRI/Assets.xcassets" ]; then cp -R UHRI/Assets.xcassets ./Assets.xcassets 2>/dev/null || true; cp -R UHRI/Assets.xcassets ./UHRI.xcassets 2>/dev/null || true; fi
+          if [ -f "UHRI/ContentView.swift" ]; then cp UHRI/ContentView.swift ./ContentView.swift 2>/dev/null || true; fi
+          if [ -f "UHRI/UHRIApp.swift" ]; then cp UHRI/UHRIApp.swift ./UHRIApp.swift 2>/dev/null; cp UHRI/UHRIApp.swift ./UHRI.swift 2>/dev/null || true; fi
+          find UHRI -name "*.swift" -exec cp {} . \; 2>/dev/null || true
+          find . -maxdepth 2 -name "*.swift" -exec cp {} UHRI/ \; 2>/dev/null || true
+          ls -la *.swift 2>/dev/null; ls -la *.xcassets 2>/dev/null || true
           
           PROJECT=$(find . -name "*.xcodeproj" | head -n 1)
           echo "Building $PROJECT"
@@ -21,7 +27,7 @@ workflows:
           
           APP=$(find ~/Library/Developer/Xcode/DerivedData -name "*.app" -type d | head -n1)
           if [ -z "$APP" ]; then APP=$(find . -name "*.app" -type d | head -n1); fi
-          echo "Found APP $APP"
+          echo "APP $APP"
           du -sh "$APP" || true
           mkdir -p /tmp/Payload
           rm -rf /tmp/Payload/*
