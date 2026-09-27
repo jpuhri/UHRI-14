@@ -9,62 +9,25 @@ workflows:
       xcode: latest
       cocoapods: default
     scripts:
-      - name: Create missing files
+      - name: Create missing files and Bundle ID
         script: |
-          echo "Creating missing project files..."
-          # Create index.html that Xcode expects
           echo "<html><body>UHRI</body></html>" > index.html || true
-          echo "<html><body>UHRI</body></html>" > UHRI/index.html || true
-          
-          # Ensure Assets exists
           mkdir -p UHRI/Assets.xcassets/AppIcon.appiconset || true
-          if [ ! -f "UHRI/Assets.xcassets/Contents.json" ]; then
-            echo '{"info":{"author":"xcode","version":1}}' > UHRI/Assets.xcassets/Contents.json
-          fi
-          if [ ! -f "UHRI/Assets.xcassets/AppIcon.appiconset/Contents.json" ]; then
-            echo '{"images":[{"idiom":"universal","platform":"ios","size":"1024x1024"}]}' > UHRI/Assets.xcassets/AppIcon.appiconset/Contents.json
-          fi
-          
-          # Create Swift files if missing - REAL GREEN APP
-          if [ ! -f "UHRI/UHRIApp.swift" ]; then
-          cat > UHRI/UHRIApp.swift << 'SWIFT'
-          import SwiftUI
-          @main
-          struct UHRIApp: App {
-              var body: some Scene {
-                  WindowGroup {
-                      ContentView()
-                  }
-              }
-          }
-          SWIFT
-          fi
-          
-          if [ ! -f "UHRI/ContentView.swift" ]; then
-          cat > UHRI/ContentView.swift << 'SWIFT'
-          import SwiftUI
-          struct ContentView: View {
-              var body: some View {
-                  ZStack {
-                      Color.green.ignoresSafeArea()
-                      VStack {
-                          Text("UHRI").font(.largeTitle).bold().foregroundColor(.white)
-                          Text("GREEN BUILD WORKING").foregroundColor(.white)
-                      }
-                  }
-              }
-          }
-          SWIFT
-          fi
-          ls -la UHRI/
+          echo '{"info":{"author":"xcode","version":1}}' > UHRI/Assets.xcassets/Contents.json || true
+          echo '{"images":[{"idiom":"universal","platform":"ios","size":"1024x1024"}]}' > UHRI/Assets.xcassets/AppIcon.appiconset/Contents.json || true
+          # Try to create bundle ID com.uhri.green in Apple (ignore if already exists)
+          app-store-connect bundle-ids list | grep com.uhri.green || app-store-connect bundle-ids create --identifier com.uhri.green --name "UHRI Green" --platform IOS || echo "bundle id create failed, may already exist"
       - name: Set up code signing with your UHRI=14 New Key
         script: |
           keychain initialize
+          # This WILL create the profile now that bundle id exists
           app-store-connect fetch-signing-files "com.uhri.green" --type IOS_APP_STORE --create
           keychain add-certificates
           xcode-project use-profiles
+          ls ~/Library/MobileDevice/Provisioning\ Profiles/
       - name: Build real GREEN IPA
         script: |
-          xcode-project build-ipa --project "UHRI.xcodeproj" --scheme "UHRI"
+          # Use automatic signing to force Apple to make profile
+          xcode-project build-ipa --project "UHRI.xcodeproj" --scheme "UHRI" --archive-flags "-allowProvisioningUpdates -allowProvisioningDeviceRegistration"
     artifacts:
       - build/ios/ipa/*.ipa
