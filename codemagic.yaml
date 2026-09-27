@@ -1,30 +1,32 @@
 workflows:
-  uhri-green-test:
-    name: UHRI - ULTIMATE GREEN - NEW PROJECT
+  uhri-14-final:
+    name: UHRI-14 FINAL BUILD
     instance_type: mac_mini_m2
-    max_build_duration: 20
+    max_build_duration: 60
     integrations:
       app_store_connect: UHRI-14 New Key
     environment:
       xcode: latest
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.uhri.app
     scripts:
-      - name: CREATE PROJECT
+      - name: Create Bundle ID and Profile Automatically
         script: |
-          rm -rf UHRI.xcodeproj
+          keychain initialize
+          app-store-connect fetch-signing-files com.uhri.app --type IOS_APP_STORE --create
+          keychain add-certificates
+          xcode-project use-profiles
+      - name: Create Project
+        script: |
           cat > UHRIApp.swift << 'SWIFT'
           import SwiftUI
           @main struct UHRIApp: App { var body: some Scene { WindowGroup { ContentView() } } }
           SWIFT
           cat > ContentView.swift << 'SWIFT'
           import SwiftUI
-          struct ContentView: View { var body: some View { Text("UHRI GREEN!").font(.largeTitle).bold().foregroundColor(.green).padding() } }
+          struct ContentView: View { var body: some View { Text("UHRI GREEN!").font(.largeTitle).bold().foregroundColor(.green) } }
           SWIFT
           mkdir -p Assets.xcassets/AppIcon.appiconset
           echo '{"info":{"author":"xcode","version":1}}' > Assets.xcassets/Contents.json
-          echo '{"images":[{"idiom":"iphone","scale":"2x","size":"20x20"},{"idiom":"iphone","scale":"3x","size":"20x20"},{"idiom":"iphone","scale":"2x","size":"29x29"},{"idiom":"iphone","scale":"3x","size":"29x29"},{"idiom":"iphone","scale":"2x","size":"40x40"},{"idiom":"iphone","scale":"3x","size":"40x40"},{"idiom":"iphone","scale":"2x","size":"60x60"},{"idiom":"iphone","scale":"3x","size":"60x60"}]}' > Assets.xcassets/AppIcon.appiconset/Contents.json
+          echo '{"images":[]}' > Assets.xcassets/AppIcon.appiconset/Contents.json
           cat > Info.plist << 'PLIST'
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -53,30 +55,22 @@ workflows:
           D1 = {isa = PBXGroup; children = (D0, D2); sourceTree = "<group>"; };
           D2 = {isa = PBXGroup; children = (F0); name = Products; sourceTree = "<group>"; };
           T0 = {isa = PBXNativeTarget; buildConfigurationList = C1; buildPhases = (S0, BF, R0); buildRules = (); dependencies = (); name = UHRI; productName = UHRI; productReference = F0; productType = "com.apple.product-type.application"; };
-          P0 = {isa = PBXProject; attributes = {BuildIndependentTargetsInParallel = 1; LastSwiftUpdateCheck = 1500; ORGANIZATIONNAME = uhri; TargetAttributes = { T0 = { CreatedOnToolsVersion = 15.0; }; }; }; buildConfigurationList = C0; compatibilityVersion = "Xcode 14.0"; developmentRegion = en; hasScannedForEncodings = 0; knownRegions = (en, Base); mainGroup = D1; productRefGroup = D2; projectDirPath = ""; projectRoot = ""; targets = (T0); };
+          P0 = {isa = PBXProject; attributes = {BuildIndependentTargetsInParallel = 1; LastSwiftUpdateCheck = 1500;}; buildConfigurationList = C0; compatibilityVersion = "Xcode 14.0"; developmentRegion = en; hasScannedForEncodings = 0; knownRegions = (en, Base); mainGroup = D1; productRefGroup = D2; projectDirPath = ""; projectRoot = ""; targets = (T0); };
           R0 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (A3); runOnlyForDeploymentPostprocessing = 0; };
           S0 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A1, A2); runOnlyForDeploymentPostprocessing = 0; };
           C0 = {isa = XCConfigurationList; buildConfigurations = (C01, C02); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
           C1 = {isa = XCConfigurationList; buildConfigurations = (C11, C12); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
-          C01 = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ANALYZER_NONNULL = YES; CODE_SIGN_STYLE = Automatic; }; name = Debug; };
-          C02 = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ANALYZER_NONNULL = YES; CODE_SIGN_STYLE = Automatic; }; name = Release; };
-          C11 = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_STYLE = Automatic; INFOPLIST_FILE = Info.plist; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks"; PRODUCT_BUNDLE_IDENTIFIER = com.uhri.app; PRODUCT_NAME = UHRI; SWIFT_VERSION = 5.0; }; name = Debug; };
-          C12 = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_STYLE = Automatic; INFOPLIST_FILE = Info.plist; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks"; PRODUCT_BUNDLE_IDENTIFIER = com.uhri.app; PRODUCT_NAME = UHRI; SWIFT_VERSION = 5.0; }; name = Release; };
+          C01 = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO;}; name = Debug; };
+          C02 = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO;}; name = Release; };
+          C11 = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; INFOPLIST_FILE = Info.plist; PRODUCT_BUNDLE_IDENTIFIER = com.uhri.app; PRODUCT_NAME = UHRI; SWIFT_VERSION = 5.0; CODE_SIGN_STYLE = Automatic;}; name = Debug; };
+          C12 = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; INFOPLIST_FILE = Info.plist; PRODUCT_BUNDLE_IDENTIFIER = com.uhri.app; PRODUCT_NAME = UHRI; SWIFT_VERSION = 5.0; CODE_SIGN_STYLE = Automatic;}; name = Release; };
           }; rootObject = P0; }
           PBX
-      - name: Create Bundle ID automatically
+      - name: Build IPA
         script: |
-          echo "Creating Bundle ID com.uhri.app in Apple..."
-          app-store-connect fetch-signing-files com.uhri.app --type IOS_APP_STORE --create || echo "Will create automatically"
-      - name: Build IPA with automatic signing
-        script: |
-          xcode-project use-profiles
-          xcode-project build-ipa --archive-flags="CODE_SIGN_STYLE=Automatic"
-          ls -lh build/ios/ipa/*.ipa || ls -lh *.ipa || ls -lh build/ipa/*.ipa
+          xcode-project build-ipa --project UHRI.xcodeproj --target UHRI
     artifacts:
-      - build/ios/ipa/*.ipa
-      - build/ipa/*.ipa
-      - *.ipa
+      - "build/ios/ipa/*.ipa"
     publishing:
       app_store_connect:
         auth: integration
