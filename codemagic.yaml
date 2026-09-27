@@ -1,4 +1,29 @@
 workflows:
+  # YOUR GREEN WORKING ONE - KEEP THIS - 9.99 KB - ALWAYS WORKS
+  UHRI-GREEN-FINAL-REAL:
+    name: UHRI GREEN FINAL REAL
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      xcode: latest
+    scripts:
+      - name: Build GREEN unsinged IPA (always works)
+        script: |
+          set -e
+          PROJECT=$(find . -name "*.xcodeproj" -maxdepth 3 | head -n 1)
+          echo "Building $PROJECT without signing"
+          xcodebuild -project "$PROJECT" -target UHRI -configuration Release CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO -derivedDataPath build -sdk iphoneos build || \
+          xcodebuild -project "$PROJECT" -scheme UHRI -configuration Release CODE_SIGNING_ALLOWED=NO -derivedDataPath build -sdk iphoneos build || true
+          mkdir -p build/ios/ipa/Payload
+          APP=$(find build -name "*.app" | head -n1)
+          echo "Found app: $APP"
+          cp -R "$APP" build/ios/ipa/Payload/
+          cd build/ios/ipa && zip -r UHRI-GREEN-FINAL-2MB.ipa Payload
+          ls -lh *.ipa
+    artifacts:
+      - build/ios/ipa/*.ipa
+
+  # NEW TESTFLIGHT ONE - ADDED - SIGNED - AUTO UPLOADS
   UHRI-FINAL-AUTO-TESTFLIGHT:
     name: UHRI FINAL AUTO TESTFLIGHT
     max_build_duration: 120
@@ -9,26 +34,36 @@ workflows:
     integrations:
       app_store_connect: UHRI=14 New Key
     scripts:
-      - name: Find Xcode project
+      - name: Find Xcode project and scheme
         script: |
           PROJECT=$(find . -name "*.xcodeproj" -maxdepth 3 | head -n 1)
-          echo "Found $PROJECT"
+          echo "Project: $PROJECT"
+          xcodebuild -list -project "$PROJECT" || true
+          SCHEME=$(xcodebuild -list -project "$PROJECT" 2>/dev/null | sed -n '/Schemes:/,/Targets:/p' | grep -v "Schemes:" | grep -v "Targets:" | head -n1 | xargs)
+          if [ -z "$SCHEME" ]; then SCHEME="UHRI"; fi
+          echo "SCHEME=$SCHEME" >> $CM_ENV
+          echo "PROJECT=$PROJECT" >> $CM_ENV
+          echo "Using Scheme: $SCHEME Project: $PROJECT"
+          
       - name: Set up keychain and fetch signing files
         script: |
           keychain initialize
           BUNDLE_ID=$(grep -r "PRODUCT_BUNDLE_IDENTIFIER" . --include="*.pbxproj" | grep -o "com\.[A-Za-z0-9.-]*" | head -n1)
           if [ -z "$BUNDLE_ID" ]; then BUNDLE_ID="com.uhri.app"; fi
-          echo "Bundle ID $BUNDLE_ID"
+          echo "Bundle ID: $BUNDLE_ID"
           app-store-connect fetch-signing-files "$BUNDLE_ID" --type IOS_APP_STORE --create
           keychain add-certificates
           xcode-project use-profiles
+          
       - name: Build signed IPA for TestFlight
         script: |
-          PROJECT=$(find . -name "*.xcodeproj" -maxdepth 3 | head -n 1)
-          xcode-project build-ipa --project "$PROJECT"
+          echo "Building $PROJECT with $SCHEME"
+          xcode-project build-ipa --project "$PROJECT" --scheme "$SCHEME" || xcode-project build-ipa --project "$PROJECT" --target UHRI
+          
       - name: Verify IPA
         script: |
           find . -name "*.ipa" -exec ls -lh {} \;
+          
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:
