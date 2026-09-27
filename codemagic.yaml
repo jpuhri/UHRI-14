@@ -5,117 +5,96 @@ workflows:
     max_build_duration: 30
     environment:
       xcode: latest
-      cocoapods: default
     scripts:
-      - name: DELETE BROKEN PROJECT AND CREATE NEW ONE
+      - name: CREATE NEW PROJECT - FIXED
         script: |
-          rm -rf UHRI.xcodeproj UHRI.xcworkspace Pods Podfile.lock
-          cat > UHRIApp.swift << 'EOF'
+          rm -rf UHRI.xcodeproj
+          cat > UHRIApp.swift << 'SWIFT'
           import SwiftUI
-          @main
-          struct UHRIApp: App {
-              var body: some Scene { WindowGroup { ContentView() } }
-          }
-          EOF
-          cat > ContentView.swift << 'EOF'
+          @main struct UHRIApp: App { var body: some Scene { WindowGroup { ContentView() } } }
+          SWIFT
+          cat > ContentView.swift << 'SWIFT'
           import SwiftUI
           struct ContentView: View {
               var body: some View {
                   VStack(spacing: 20) {
                       Text("UHRI").font(.system(size: 60, weight: .bold)).foregroundColor(.blue)
-                      Text("Home Inspection").font(.title2)
-                      Text("FINAL GREEN BUILD!").font(.title).bold().foregroundColor(.green)
-                      Text("Version 1.0").font(.caption)
+                      Text("GREEN BUILD WORKS!").font(.title).bold().foregroundColor(.green)
                   }.padding()
               }
           }
-          EOF
+          SWIFT
           mkdir -p Assets.xcassets/AppIcon.appiconset
-          cat > Assets.xcassets/Contents.json << 'JSON'
-          {"info":{"author":"xcode","version":1}}
-          JSON
-          cat > Assets.xcassets/AppIcon.appiconset/Contents.json << 'JSON'
-          {"images":[{"idiom":"iphone","scale":"2x","size":"20x20"},{"idiom":"iphone","scale":"3x","size":"20x20"},{"idiom":"iphone","scale":"2x","size":"29x29"},{"idiom":"iphone","scale":"3x","size":"29x29"},{"idiom":"iphone","scale":"2x","size":"40x40"},{"idiom":"iphone","scale":"3x","size":"40x40"},{"idiom":"iphone","scale":"2x","size":"60x60"},{"idiom":"iphone","scale":"3x","size":"60x60"},{"idiom":"ios-marketing","scale":"1x","size":"1024x1024"}],"info":{"author":"xcode","version":1}}
-          JSON
+          echo '{"info":{"author":"xcode","version":1}}' > Assets.xcassets/Contents.json
+          echo '{"images":[{"idiom":"iphone","scale":"2x","size":"20x20"},{"idiom":"iphone","scale":"3x","size":"20x20"},{"idiom":"iphone","scale":"2x","size":"29x29"},{"idiom":"iphone","scale":"3x","size":"29x29"},{"idiom":"iphone","scale":"2x","size":"40x40"},{"idiom":"iphone","scale":"3x","size":"40x40"},{"idiom":"iphone","scale":"2x","size":"60x60"},{"idiom":"iphone","scale":"3x","size":"60x60"},{"idiom":"ios-marketing","scale":"1x","size":"1024x1024"}],"info":{"author":"xcode","version":1}}' > Assets.xcassets/AppIcon.appiconset/Contents.json
           cat > Info.plist << 'PLIST'
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>CFBundleIdentifier</key><string>com.uhri.app</string>
-            <key>CFBundleName</key><string>UHRI</string>
-            <key>CFBundleDisplayName</key><string>UHRI</string>
-            <key>CFBundleExecutable</key><string>UHRI</string>
-            <key>CFBundlePackageType</key><string>APPL</string>
-            <key>CFBundleShortVersionString</key><string>1.0</string>
-            <key>CFBundleVersion</key><string>1</string>
-            <key>LSRequiresIPhoneOS</key><true/>
-            <key>UILaunchStoryboardName</key><string>LaunchScreen</string>
-          </dict>
-          </plist>
+          <plist version="1.0"><dict>
+          <key>CFBundleIdentifier</key><string>com.uhri.app</string>
+          <key>CFBundleName</key><string>UHRI</string>
+          <key>CFBundleDisplayName</key><string>UHRI</string>
+          <key>CFBundleExecutable</key><string>UHRI</string>
+          <key>CFBundlePackageType</key><string>APPL</string>
+          <key>CFBundleShortVersionString</key><string>1.0</string>
+          <key>CFBundleVersion</key><string>1</string>
+          <key>LSRequiresIPhoneOS</key><true/>
+          </dict></plist>
           PLIST
-          cat > LaunchScreen.storyboard << 'LS'
-          <?xml version="1.0" encoding="UTF-8"?>
-          <document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="21701"><scenes><scene sceneID="01"><objects><viewController id="02" sceneMemberID="viewController"><view key="view" contentMode="scaleToFill" id="03"><color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/></view></viewController><placeholder placeholderIdentifier="IBFirstResponder" id="04" userLabel="First Responder" sceneMemberID="firstResponder"/></objects></scene></scenes></document>
-          LS
           mkdir -p UHRI.xcodeproj
           cat > UHRI.xcodeproj/project.pbxproj << 'PBX'
           // !$*UTF8*$!
-          {
-            archiveVersion = 1;
-            classes = {};
-            objectVersion = 56;
-            objects = {
-              A1 = {isa = PBXBuildFile; fileRef = F1; };
-              A2 = {isa = PBXBuildFile; fileRef = F2; };
-              A3 = {isa = PBXBuildFile; fileRef = F3; };
-              A4 = {isa = PBXBuildFile; fileRef = F4; };
-              F0 = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = UHRI.app; sourceTree = BUILT_PRODUCTS_DIR; };
-              F1 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UHRIApp.swift; sourceTree = "<group>"; };
-              F2 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-              F3 = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-              F4 = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
-              F5 = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-              BF = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
-              G0 = {isa = PBXGroup; children = (F1, F2, F3, F4, F5); path = ""; sourceTree = "<group>"; };
-              G1 = {isa = PBXGroup; children = (G0, G2); sourceTree = "<group>"; };
-              G2 = {isa = PBXGroup; children = (F0); name = Products; sourceTree = "<group>"; };
-              T0 = {isa = PBXNativeTarget; buildConfigurationList = C1; buildPhases = (S0, BF, R0); buildRules = (); dependencies = (); name = UHRI; productName = UHRI; productReference = F0; productType = "com.apple.product-type.application"; };
-              P0 = {isa = PBXProject; attributes = {BuildIndependentTargetsInParallel = 1; LastSwiftUpdateCheck = 1500; LastUpgradeCheck = 1500; ORGANIZATIONNAME = UHRI; TargetAttributes = {T0 = {CreatedOnToolsVersion = 15.0;};};}; buildConfigurationList = C0; compatibilityVersion = "Xcode 14.0"; developmentRegion = en; hasScannedForEncodings = 0; knownRegions = (en, Base); mainGroup = G1; productRefGroup = G2; projectDirPath = ""; projectRoot = ""; targets = (T0); };
-              R0 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (A3, A4); runOnlyForDeploymentPostprocessing = 0; };
-              S0 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A1, A2); runOnlyForDeploymentPostprocessing = 0; };
-              CB1 = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor; CODE_SIGNING_ALLOWED = NO; INFOPLIST_FILE = Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 15.0; LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks"); PRODUCT_BUNDLE_IDENTIFIER = com.uhri.app; PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_EMIT_LOC_STRINGS = YES; SWIFT_VERSION = 5.0; }; name = Debug; };
-              CB2 = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor; CODE_SIGNING_ALLOWED = NO; INFOPLIST_FILE = Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 15.0; LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks"); PRODUCT_BUNDLE_IDENTIFIER = com.uhri.app; PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_EMIT_LOC_STRINGS = YES; SWIFT_VERSION = 5.0; }; name = Release; };
-              CP1 = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ANALYZER_NONNULL = YES; CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE; CLANG_CXX_LANGUAGE_STANDARD = "gnu++20"; CLANG_ENABLE_MODULES = YES; CLANG_ENABLE_OBJC_ARC = YES; CLANG_ENABLE_OBJC_WEAK = YES; CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES; CLANG_WARN_BOOL_CONVERSION = YES; CLANG_WARN_COMMA = YES; CLANG_WARN_CONSTANT_CONVERSION = YES; CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES; CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR; CLANG_WARN_DOCUMENTATION_COMMENTS = YES; CLANG_WARN_EMPTY_BODY = YES; CLANG_WARN_ENUM_CONVERSION = YES; CLANG_WARN_INFINITE_RECURSION = YES; CLANG_WARN_INT_CONVERSION = YES; CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES; CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES; CLANG_WARN_OBJC_LITERAL_CONVERSION = YES; CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR; CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES; CLANG_WARN_RANGE_LOOP_ANALYSIS = YES; CLANG_WARN_STRICT_PROTOTYPES = YES; CLANG_WARN_SUSPICIOUS_MOVE = YES; CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE; CLANG_WARN_UNREACHABLE_CODE = YES; CLANG_WARN__DUPLICATE_METHOD_MATCH = YES; COPY_PHASE_STRIP = NO; DEBUG_INFORMATION_FORMAT = dwarf; ENABLE_STRICT_OBJC_MSGSEND = YES; ENABLE_TESTABILITY = YES; ENABLE_USER_SCRIPT_SANDBOXING = YES; GCC_C_LANGUAGE_STANDARD = gnu11; GCC_DYNAMIC_NO_PIC = NO; GCC_NO_COMMON_BLOCKS = YES; GCC_OPTIMIZATION_LEVEL = 0; GCC_PREPROCESSOR_DEFINITIONS = ("DEBUG=1", "$(inherited)"); GCC_WARN_64_TO_32_BIT_CONVERSION = YES; GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR; GCC_WARN_UNDECLARED_SELECTOR = YES; GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE; GCC_WARN_UNUSED_FUNCTION = YES; GCC_WARN_UNUSED_VARIABLE = YES; IPHONEOS_DEPLOYMENT_TARGET = 15.0; LOCALIZATION_PREFERS_STRING_CATALOGS = YES; MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE; MTL_FAST_MATH = YES; ONLY_ACTIVE_ARCH = YES; SDKROOT = iphoneos; SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG $(inherited)"; SWIFT_OPTIMIZATION_LEVEL = "-Onone"; }; name = Debug; };
-              CP2 = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ANALYZER_NONNULL = YES; CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE; CLANG_CXX_LANGUAGE_STANDARD = "gnu++20"; CLANG_ENABLE_MODULES = YES; CLANG_ENABLE_OBJC_ARC = YES; CLANG_ENABLE_OBJC_WEAK = YES; CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES; CLANG_WARN_BOOL_CONVERSION = YES; CLANG_WARN_COMMA = YES; CLANG_WARN_CONSTANT_CONVERSION = YES; CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES; CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR; CLANG_WARN_DOCUMENTATION_COMMENTS = YES; CLANG_WARN_EMPTY_BODY = YES; CLANG_WARN_ENUM_CONVERSION = YES; CLANG_WARN_INFINITE_RECURSION = YES; CLANG_WARN_INT_CONVERSION = YES; CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES; CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES; CLANG_WARN_OBJC_LITERAL_CONVERSION = YES; CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR; CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES; CLANG_WARN_RANGE_LOOP_ANALYSIS = YES; CLANG_WARN_STRICT_PROTOTYPES = YES; CLANG_WARN_SUSPICIOUS_MOVE = YES; CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE; CLANG_WARN_UNREACHABLE_CODE = YES; CLANG_WARN__DUPLICATE_METHOD_MATCH = YES; COPY_PHASE_STRIP = NO; DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym"; ENABLE_NS_ASSERTIONS = NO; ENABLE_STRICT_OBJC_MSGSEND = YES; ENABLE_USER_SCRIPT_SANDBOXING = YES; GCC_C_LANGUAGE_STANDARD = gnu11; GCC_NO_COMMON_BLOCKS = YES; GCC_OPTIMIZATION_LEVEL = s; GCC_WARN_64_TO_32_BIT_CONVERSION = YES; GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR; GCC_WARN_UNDECLARED_SELECTOR = YES; GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE; GCC_WARN_UNUSED_FUNCTION = YES; GCC_WARN_UNUSED_VARIABLE = YES; IPHONEOS_DEPLOYMENT_TARGET = 15.0; LOCALIZATION_PREFERS_STRING_CATALOGS = YES; MTL_ENABLE_DEBUG_INFO = NO; MTL_FAST_MATH = YES; SDKROOT = iphoneos; SWIFT_COMPILATION_MODE = wholemodule; VALIDATE_PRODUCT = YES; }; name = Release; };
-              C0 = {isa = XCConfigurationList; buildConfigurations = (CP1, CP2); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
-              C1 = {isa = XCConfigurationList; buildConfigurations = (CB1, CB2); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
-            };
-            rootObject = P0;
-          }
+          { archiveVersion = 1; classes = {}; objectVersion = 56; objects = {
+          A1 = {isa = PBXBuildFile; fileRef = F1; }; A2 = {isa = PBXBuildFile; fileRef = F2; }; A3 = {isa = PBXBuildFile; fileRef = F3; };
+          F0 = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = UHRI.app; sourceTree = BUILT_PRODUCTS_DIR; };
+          F1 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UHRIApp.swift; sourceTree = "<group>"; };
+          F2 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+          F3 = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+          F5 = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+          BF = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+          G0 = {isa = PBXGroup; children = (F1, F2, F3, F5); path = ""; sourceTree = "<group>"; };
+          G1 = {isa = PBXGroup; children = (G0, G2); sourceTree = "<group>"; };
+          G2 = {isa = PBXGroup; children = (F0); name = Products; sourceTree = "<group>"; };
+          T0 = {isa = PBXNativeTarget; buildConfigurationList = C1; buildPhases = (S0, BF, R0); buildRules = (); dependencies = (); name = UHRI; productName = UHRI; productReference = F0; productType = "com.apple.product-type.application"; };
+          P0 = {isa = PBXProject; attributes = {BuildIndependentTargetsInParallel = 1; LastSwiftUpdateCheck = 1500; LastUpgradeCheck = 1500; ORGANIZATIONNAME = UHRI; TargetAttributes = {T0 = {CreatedOnToolsVersion = 15.0;};};}; buildConfigurationList = C0; compatibilityVersion = "Xcode 14.0"; developmentRegion = en; hasScannedForEncodings = 0; knownRegions = (en, Base); mainGroup = G1; productRefGroup = G2; projectDirPath = ""; projectRoot = ""; targets = (T0); };
+          R0 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (A3); runOnlyForDeploymentPostprocessing = 0; };
+          S0 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A1, A2); runOnlyForDeploymentPostprocessing = 0; };
+          CB1 = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGNING_ALLOWED = NO; CODE_SIGNING_REQUIRED = NO; CODE_SIGN_IDENTITY = ""; INFOPLIST_FILE = Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 15.0; PRODUCT_BUNDLE_IDENTIFIER = com.uhri.app; PRODUCT_NAME = UHRI; SWIFT_VERSION = 5.0; }; name = Debug; };
+          CB2 = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGNING_ALLOWED = NO; CODE_SIGNING_REQUIRED = NO; CODE_SIGN_IDENTITY = ""; INFOPLIST_FILE = Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 15.0; PRODUCT_BUNDLE_IDENTIFIER = com.uhri.app; PRODUCT_NAME = UHRI; SWIFT_VERSION = 5.0; }; name = Release; };
+          CP1 = {isa = XCBuildConfiguration; buildSettings = {SDKROOT = iphoneos; }; name = Debug; };
+          CP2 = {isa = XCBuildConfiguration; buildSettings = {SDKROOT = iphoneos; }; name = Release; };
+          C0 = {isa = XCConfigurationList; buildConfigurations = (CP1, CP2); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+          C1 = {isa = XCConfigurationList; buildConfigurations = (CB1, CB2); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+          }; rootObject = P0; }
           PBX
-          echo "Fixed project - path = empty, not .."
           ls -lh
-          cat UHRI.xcodeproj/project.pbxproj | grep -A2 "children"
-      - name: Build FIXED PROJECT - WILL BE REAL 2MB IPA
+      - name: BUILD - REAL IPA 2-3 MB
         script: |
           set -e
-          echo "Building with fixed paths..."
-          xcodebuild -project UHRI.xcodeproj -scheme UHRI -configuration Release -sdk iphoneos CODE_SIGNING_ALLOWED=NO -derivedDataPath /tmp/derived BUILD_DIR=/tmp/build | tail -20
-          echo "=== Find app ==="
-          find /tmp/build -name "UHRI.app" -type d -exec ls -lh {} \; 2>/dev/null || true
-          APP=$(find /tmp/build -name "UHRI.app" -type d | head -1)
-          if [ -z "$APP" ]; then APP=$(find /tmp/derived -name "UHRI.app" -type d | head -1); fi
-          echo "App found at: $APP"
-          ls -lh "$APP" || true
+          echo "=== Building with -target (not -scheme) ==="
+          xcodebuild -project UHRI.xcodeproj -target UHRI -configuration Release -sdk iphoneos CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" -derivedDataPath /tmp/derived 2>&1 | tail -30
+          echo "=== SEARCH ALL LOCATIONS ==="
+          echo "Derived:"
+          find /tmp/derived -name "UHRI.app" -type d 2>/dev/null | head -5
+          echo "Build:"
+          find /tmp -name "UHRI.app" -type d 2>/dev/null | head -5
+          APP=$(find /tmp/derived -name "UHRI.app" -type d | head -1)
+          if [ -z "$APP" ]; then APP=$(find /tmp -name "UHRI.app" -type d | head -1); fi
+          echo "FINAL APP PATH: $APP"
+          echo "=== CONTENTS OF APP ==="
+          ls -lhR "$APP" | head -100
+          echo "=== SIZE ==="
           du -sh "$APP"
+          du -sh "$APP"/*
+          echo "=== MAKING REAL IPA ==="
           mkdir -p build/ios/ipa/Payload
           rm -rf build/ios/ipa/Payload/*
           cp -R "$APP" build/ios/ipa/Payload/
+          echo "Payload contents:"
+          ls -lhR build/ios/ipa/Payload | head -50
           cd build/ios/ipa
-          zip -r -y UHRI-FIXED-GREEN.ipa Payload
+          zip -r UHRI-REAL-2MB.ipa Payload -x "*.DS_Store"
           ls -lh *.ipa
-          du -h *.ipa
-          echo "=== SUCCESS - SHOULD BE 2-3 MB, NOT 328 BYTES ==="
+          echo "=== SHOULD BE 2-3 MB NOW ==="
     artifacts:
       - build/ios/ipa/*.ipa
