@@ -25,7 +25,6 @@ workflows:
             exit 1
           fi
           echo "Found $PROJECT"
-          ls -la
           
       - name: Set up keychain and fetch signing files
         script: |
@@ -39,25 +38,19 @@ workflows:
         script: |
           set -e
           PROJECT=$(find . -name "*.xcodeproj" -maxdepth 3 | head -n 1)
-          echo "Building $PROJECT"
           xcode-project build-ipa --project "$PROJECT" --scheme UHRI || xcode-project build-ipa --project "$PROJECT"
           
       - name: Verify IPA size
         script: |
-          ls -lh build/ios/ipa/*.ipa || ls -lh *.ipa || find . -name "*.ipa" -exec ls -lh {} \;
+          ls -lh build/ios/ipa/*.ipa || find . -name "*.ipa" -exec ls -lh {} \;
           
     artifacts:
       - build/ios/ipa/*.ipa
       - $HOME/Library/Logs/gym/*.log
-      - /tmp/xcodebuild_logs/*.log
     publishing:
       app_store_connect:
         auth: integration
-        integration: UHRI=14 New Key
         submit_to_testflight: true
-        beta_groups:
-          - Internal Testing
-        skip_metadata: false
       email:
         recipients:
           - uhri@yahoo.com
