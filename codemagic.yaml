@@ -8,45 +8,29 @@ workflows:
       cocoapods: default
     integrations:
       app_store_connect: UHRI=14 New Key
-    triggering:
-      events:
-        - push
-      branch_patterns:
-        - pattern: main
-          include: true
-          source: true
     scripts:
       - name: Find Xcode project
         script: |
-          set -e
           PROJECT=$(find . -name "*.xcodeproj" -maxdepth 3 | head -n 1)
-          if [ -z "$PROJECT" ]; then
-            echo "No xcodeproj found"
-            exit 1
-          fi
           echo "Found $PROJECT"
-          
       - name: Set up keychain and fetch signing files
         script: |
-          set -e
           keychain initialize
-          app-store-connect fetch-signing-files "com.uhri.app" --type IOS_APP_STORE --create || app-store-connect fetch-signing-files --create
+          BUNDLE_ID=$(grep -r "PRODUCT_BUNDLE_IDENTIFIER" . --include="*.pbxproj" | grep -o "com\.[A-Za-z0-9.-]*" | head -n1)
+          if [ -z "$BUNDLE_ID" ]; then BUNDLE_ID="com.uhri.app"; fi
+          echo "Bundle ID $BUNDLE_ID"
+          app-store-connect fetch-signing-files "$BUNDLE_ID" --type IOS_APP_STORE --create
           keychain add-certificates
           xcode-project use-profiles
-          
       - name: Build signed IPA for TestFlight
         script: |
-          set -e
           PROJECT=$(find . -name "*.xcodeproj" -maxdepth 3 | head -n 1)
-          xcode-project build-ipa --project "$PROJECT" --scheme UHRI || xcode-project build-ipa --project "$PROJECT"
-          
-      - name: Verify IPA size
+          xcode-project build-ipa --project "$PROJECT"
+      - name: Verify IPA
         script: |
-          ls -lh build/ios/ipa/*.ipa || find . -name "*.ipa" -exec ls -lh {} \;
-          
+          find . -name "*.ipa" -exec ls -lh {} \;
     artifacts:
       - build/ios/ipa/*.ipa
-      - $HOME/Library/Logs/gym/*.log
     publishing:
       app_store_connect:
         auth: integration
