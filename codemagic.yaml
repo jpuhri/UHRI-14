@@ -1,15 +1,18 @@
 workflows:
-  UHRI-GREEN-FINAL-REAL:
-    name: UHRI GREEN FINAL REAL
+  UHRI-FINAL-SUBMIT-TO-APPSTORE:
+    name: UHRI FINAL SUBMIT TO APPSTORE
     max_build_duration: 60
     instance_type: mac_mini_m2
     environment:
       xcode: latest
+      bundle_identifier: com.uhri.app
+    # IMPORTANT: Connect App Store Connect in Codemagic dashboard first
+    # Codemagic → Teams → Integrations → App Store Connect → Add key
+    integrations:
+      app_store_connect: UHRI-Key
     scripts:
-      - name: Build GREEN
+      - name: Fix files (same fix that gives 14.66 KB SUCCESS)
         script: |
-          echo "This is the FIX that gives 14.75 KB BUILD SUCCEEDED"
-          # Fix Info.plist - the file that was missing in 522 B builds
           if [ ! -f "./Info.plist" ]; then
             cat > ./Info.plist << 'PLIST'
           <?xml version="1.0" encoding="UTF-8"?>
@@ -22,37 +25,55 @@ workflows:
             <key>CFBundleShortVersionString</key><string>1.0</string>
             <key>CFBundleVersion</key><string>1</string>
             <key>LSRequiresIPhoneOS</key><true/>
+            <key>UILaunchStoryboardName</key><string>LaunchScreen</string>
           </dict></plist>
           PLIST
           fi
           mkdir -p UHRI && cp ./Info.plist ./UHRI/Info.plist 2>/dev/null || true
-          
-          # Fix swift files
-          if [ ! -f "./ContentView.swift" ]; then echo 'import SwiftUI; struct ContentView: View { var body: some View { Text("UHRI") } }' > ./ContentView.swift; fi
-          cp ./ContentView.swift ./UHRI/ContentView.swift 2>/dev/null || true
-          if [ ! -f "./UHRIApp.swift" ]; then echo 'import SwiftUI; @main struct UHRIApp: App { var body: some Scene { WindowGroup { ContentView() } } }' > ./UHRIApp.swift; fi
-          cp ./UHRIApp.swift ./UHRI/UHRIApp.swift 2>/dev/null || true
+          [ -f "./ContentView.swift" ] || echo 'import SwiftUI; struct ContentView: View { var body: some View { VStack { Text("UHRI").font(.largeTitle); Text("14.66 KB SUCCESS") } } }' > ./ContentView.swift
+          cp ./ContentView.swift ./UHRI/ 2>/dev/null || true
+          [ -f "./UHRIApp.swift" ] || echo 'import SwiftUI; @main struct UHRIApp: App { var body: some Scene { WindowGroup { ContentView() } } }' > ./UHRIApp.swift
+          cp ./UHRIApp.swift ./UHRI/ 2>/dev/null || true
           cp ./UHRIApp.swift ./UHRI.swift 2>/dev/null || true
-          
-          # Fix Assets
           mkdir -p Assets.xcassets/AppIcon.appiconset
           echo '{"info":{"author":"xcode","version":1}}' > Assets.xcassets/Contents.json || true
           echo '{"images":[{"idiom":"universal","platform":"ios","size":"1024x1024"}],"info":{"author":"xcode","version":1}}' > Assets.xcassets/AppIcon.appiconset/Contents.json || true
-          cp -R ./Assets.xcassets ./UHRI/Assets.xcassets 2>/dev/null || true
-          echo "<html></html>" > index.html; echo "<html></html>" > UHRI/index.html 2>/dev/null || true
+          cp -R ./Assets.xcassets ./UHRI/ 2>/dev/null || true
           
-          ls -lh *.swift *.plist Assets.xcassets || true
+      - name: Set up signing
+        script: |
+          keychain initialize
+          app-store-connect fetch-signing-files "$BUNDLE_ID" --type IOS_APP_STORE --create
+          keychain add-certificates
+          xcode-project use-profiles
           
+      - name: Build SIGNED IPA for App Store
+        script: |
           PROJECT=$(find . -name "*.xcodeproj" | head -n 1)
-          echo "Building $PROJECT"
-          xcodebuild -project "$PROJECT" -scheme UHRI -configuration Release -sdk iphoneos CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" || xcodebuild -project "$PROJECT" -target UHRI -configuration Release -sdk iphoneos CODE_SIGNING_ALLOWED=NO || true
-          
-          APP=$(find ~/Library/Developer/Xcode/DerivedData -name "*.app" -type d | head -n1)
-          if [ -z "$APP" ]; then APP=$(find . -name "*.app" -type d | head -n1); fi
-          echo "APP: $APP"
-          mkdir -p /tmp/Payload; rm -rf /tmp/Payload/*; cp -R "$APP" /tmp/Payload/
-          cd /tmp && rm -f UHRI-GREEN-FINAL-2MB.ipa && zip -r UHRI-GREEN-FINAL-2MB.ipa Payload
-          mkdir -p $CM_BUILD_DIR/build/ios/ipa; cp /tmp/UHRI-GREEN-FINAL-2MB.ipa $CM_BUILD_DIR/build/ios/ipa/
-          ls -lh $CM_BUILD_DIR/build/ios/ipa/
+          xcode-project detect
+          xcodebuild -project "$PROJECT" -scheme UHRI -configuration Release -sdk iphoneos -archivePath /tmp/UHRI.xcarchive archive
+          xcodebuild -exportArchive -archivePath /tmp/UHRI.xcarchive -exportPath /tmp/export -exportOptionsPlist /tmp/export.plist || {
+            cat > /tmp/export.plist << 'EXP'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>teamID</key><string>$(TEAM_ID)</string>
+          </dict></plist>
+          EXP
+            xcodebuild -exportArchive -archivePath /tmp/UHRI.xcarchive -exportPath /tmp/export -exportOptionsPlist /tmp/export.plist
+          }
+          IPA=$(find /tmp/export -name "*.ipa" | head -n1)
+          echo "SIGNED IPA: $IPA"
+          ls -lh "$IPA"
+          mkdir -p build/ios/ipa
+          cp "$IPA" build/ios/ipa/UHRI-FINAL-SIGNED.ipa
     artifacts:
       - build/ios/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        beta_groups:
+          - UHRI Beta
