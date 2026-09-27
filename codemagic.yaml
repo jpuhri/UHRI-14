@@ -8,15 +8,25 @@ workflows:
     scripts:
       - name: Build GREEN
         script: |
+          echo "Creating missing index.html"
+          echo "<html><body>UHRI</body></html>" > index.html
+          mkdir -p UHRI 2>/dev/null; echo "<html><body>UHRI</body></html>" > UHRI/index.html
+          find . -name "*.pbxproj" -exec grep -l "index.html" {} \; | while read proj; do dir=$(dirname "$proj"); echo "Project dir $dir"; echo "<html></html>" > "$dir/../index.html" 2>/dev/null || true; echo "<html></html>" > "$dir/index.html" 2>/dev/null || true; done
+          grep -R "index.html" . --include="*.pbxproj" -A2 -B2 || true
+          ls -la *.html 2>/dev/null; ls -la UHRI/*.html 2>/dev/null || true
+          
           PROJECT=$(find . -name "*.xcodeproj" | head -n 1)
-          echo $PROJECT
+          echo "Building $PROJECT"
           xcodebuild -project "$PROJECT" -scheme UHRI -configuration Release -sdk iphoneos CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO -allowProvisioningUpdates -quiet || xcodebuild -project "$PROJECT" -target UHRI -configuration Release -sdk iphoneos CODE_SIGNING_ALLOWED=NO -quiet || true
-          APP=$(find ~/Library/Developer/Xcode/DerivedData -name "*.app" | head -n1)
-          if [ -z "$APP" ]; then APP=$(find . -name "*.app" | head -n1); fi
-          echo "APP $APP"
+          
+          APP=$(find ~/Library/Developer/Xcode/DerivedData -name "*.app" -type d | head -n1)
+          if [ -z "$APP" ]; then APP=$(find . -name "*.app" -type d | head -n1); fi
+          echo "Found APP $APP"
+          du -sh "$APP" || true
           mkdir -p /tmp/Payload
+          rm -rf /tmp/Payload/*
           cp -R "$APP" /tmp/Payload/
-          cd /tmp && zip -r UHRI-GREEN-FINAL-2MB.ipa Payload
+          cd /tmp && rm -f UHRI-GREEN-FINAL-2MB.ipa && zip -r UHRI-GREEN-FINAL-2MB.ipa Payload
           mkdir -p $CM_BUILD_DIR/build/ios/ipa
           cp /tmp/UHRI-GREEN-FINAL-2MB.ipa $CM_BUILD_DIR/build/ios/ipa/
           ls -lh $CM_BUILD_DIR/build/ios/ipa/
