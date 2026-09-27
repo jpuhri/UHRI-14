@@ -2,11 +2,11 @@ workflows:
   uhri-green-test:
     name: UHRI - ULTIMATE GREEN - NEW PROJECT
     instance_type: mac_mini_m2
-    max_build_duration: 30
+    max_build_duration: 20
     environment:
       xcode: latest
     scripts:
-      - name: CREATE NEW PROJECT - FIXED
+      - name: CREATE PROJECT
         script: |
           rm -rf UHRI.xcodeproj
           cat > UHRIApp.swift << 'SWIFT'
@@ -15,14 +15,7 @@ workflows:
           SWIFT
           cat > ContentView.swift << 'SWIFT'
           import SwiftUI
-          struct ContentView: View {
-              var body: some View {
-                  VStack(spacing: 20) {
-                      Text("UHRI").font(.system(size: 60, weight: .bold)).foregroundColor(.blue)
-                      Text("GREEN BUILD WORKS!").font(.title).bold().foregroundColor(.green)
-                  }.padding()
-              }
-          }
+          struct ContentView: View { var body: some View { Text("UHRI GREEN!").font(.largeTitle).bold().foregroundColor(.green).padding() } }
           SWIFT
           mkdir -p Assets.xcassets/AppIcon.appiconset
           echo '{"info":{"author":"xcode","version":1}}' > Assets.xcassets/Contents.json
@@ -33,7 +26,6 @@ workflows:
           <plist version="1.0"><dict>
           <key>CFBundleIdentifier</key><string>com.uhri.app</string>
           <key>CFBundleName</key><string>UHRI</string>
-          <key>CFBundleDisplayName</key><string>UHRI</string>
           <key>CFBundleExecutable</key><string>UHRI</string>
           <key>CFBundlePackageType</key><string>APPL</string>
           <key>CFBundleShortVersionString</key><string>1.0</string>
@@ -56,7 +48,7 @@ workflows:
           G1 = {isa = PBXGroup; children = (G0, G2); sourceTree = "<group>"; };
           G2 = {isa = PBXGroup; children = (F0); name = Products; sourceTree = "<group>"; };
           T0 = {isa = PBXNativeTarget; buildConfigurationList = C1; buildPhases = (S0, BF, R0); buildRules = (); dependencies = (); name = UHRI; productName = UHRI; productReference = F0; productType = "com.apple.product-type.application"; };
-          P0 = {isa = PBXProject; attributes = {BuildIndependentTargetsInParallel = 1; LastSwiftUpdateCheck = 1500; LastUpgradeCheck = 1500; ORGANIZATIONNAME = UHRI; TargetAttributes = {T0 = {CreatedOnToolsVersion = 15.0;};};}; buildConfigurationList = C0; compatibilityVersion = "Xcode 14.0"; developmentRegion = en; hasScannedForEncodings = 0; knownRegions = (en, Base); mainGroup = G1; productRefGroup = G2; projectDirPath = ""; projectRoot = ""; targets = (T0); };
+          P0 = {isa = PBXProject; attributes = {BuildIndependentTargetsInParallel = 1; LastSwiftUpdateCheck = 1500; ORGANIZATIONNAME = UHRI; TargetAttributes = {T0 = {CreatedOnToolsVersion = 15.0;};};}; buildConfigurationList = C0; compatibilityVersion = "Xcode 14.0"; developmentRegion = en; hasScannedForEncodings = 0; knownRegions = (en, Base); mainGroup = G1; productRefGroup = G2; projectDirPath = ""; projectRoot = ""; targets = (T0); };
           R0 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (A3); runOnlyForDeploymentPostprocessing = 0; };
           S0 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A1, A2); runOnlyForDeploymentPostprocessing = 0; };
           CB1 = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGNING_ALLOWED = NO; CODE_SIGNING_REQUIRED = NO; CODE_SIGN_IDENTITY = ""; INFOPLIST_FILE = Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 15.0; PRODUCT_BUNDLE_IDENTIFIER = com.uhri.app; PRODUCT_NAME = UHRI; SWIFT_VERSION = 5.0; }; name = Debug; };
@@ -67,34 +59,17 @@ workflows:
           C1 = {isa = XCConfigurationList; buildConfigurations = (CB1, CB2); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
           }; rootObject = P0; }
           PBX
-          ls -lh
-      - name: BUILD - REAL IPA 2-3 MB
+      - name: BUILD - FIXED NO DERIVEDDATAPATH
         script: |
-          set -e
-          echo "=== Building with -target (not -scheme) ==="
-          xcodebuild -project UHRI.xcodeproj -target UHRI -configuration Release -sdk iphoneos CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" -derivedDataPath /tmp/derived 2>&1 | tail -30
-          echo "=== SEARCH ALL LOCATIONS ==="
-          echo "Derived:"
-          find /tmp/derived -name "UHRI.app" -type d 2>/dev/null | head -5
-          echo "Build:"
-          find /tmp -name "UHRI.app" -type d 2>/dev/null | head -5
-          APP=$(find /tmp/derived -name "UHRI.app" -type d | head -1)
-          if [ -z "$APP" ]; then APP=$(find /tmp -name "UHRI.app" -type d | head -1); fi
-          echo "FINAL APP PATH: $APP"
-          echo "=== CONTENTS OF APP ==="
+          xcodebuild -project UHRI.xcodeproj -target UHRI -configuration Release -sdk iphoneos CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" 2>&1 | tail -50
+          APP=$(find . -name "UHRI.app" -type d | head -1)
+          if [ -z "$APP" ]; then APP=$(find ~/Library/Developer/Xcode/DerivedData -name "UHRI.app" -type d | head -1); fi
+          echo "APP: $APP"
           ls -lhR "$APP" | head -100
-          echo "=== SIZE ==="
           du -sh "$APP"
-          du -sh "$APP"/*
-          echo "=== MAKING REAL IPA ==="
           mkdir -p build/ios/ipa/Payload
           rm -rf build/ios/ipa/Payload/*
           cp -R "$APP" build/ios/ipa/Payload/
-          echo "Payload contents:"
-          ls -lhR build/ios/ipa/Payload | head -50
-          cd build/ios/ipa
-          zip -r UHRI-REAL-2MB.ipa Payload -x "*.DS_Store"
-          ls -lh *.ipa
-          echo "=== SHOULD BE 2-3 MB NOW ==="
+          cd build/ios/ipa && zip -r UHRI-REAL-2MB.ipa Payload && ls -lh *.ipa
     artifacts:
       - build/ios/ipa/*.ipa
