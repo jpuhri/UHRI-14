@@ -5,60 +5,20 @@ workflows:
     instance_type: mac_mini_m2
     environment:
       xcode: latest
+      cocoapods: default
     scripts:
-      - name: Build GREEN - FIX index.html missing
+      - name: Set up code signing
         script: |
-          echo "FIXING index.html - this was causing BUILD FAILED"
-          # Create index.html in EVERY possible place Xcode looks
-          echo "<html><body>UHRI</body></html>" > ./index.html
-          mkdir -p UHRI
-          echo "<html><body>UHRI</body></html>" > ./UHRI/index.html
-          echo "<html><body>UHRI</body></html>" > ./UHRI-14/index.html 2>/dev/null || true
-          
-          # Fix Info.plist
-          if [ ! -f "./Info.plist" ]; then
-            cat > ./Info.plist << 'PLIST'
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0"><dict>
-            <key>CFBundleExecutable</key><string>$(EXECUTABLE_NAME)</string>
-            <key>CFBundleIdentifier</key><string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-            <key>CFBundleName</key><string>$(PRODUCT_NAME)</string>
-            <key>CFBundlePackageType</key><string>APPL</string>
-            <key>CFBundleShortVersionString</key><string>1.0</string>
-            <key>CFBundleVersion</key><string>1</string>
-            <key>LSRequiresIPhoneOS</key><true/>
-          </dict></plist>
-          PLIST
-          fi
-          cp ./Info.plist ./UHRI/Info.plist 2>/dev/null || true
-          
-          # Fix Swift files
-          [ -f "./ContentView.swift" ] || echo 'import SwiftUI; struct ContentView: View { var body: some View { Text("UHRI - GREEN SUCCESS") } }' > ./ContentView.swift
-          cp ./ContentView.swift ./UHRI/ContentView.swift 2>/dev/null || true
-          [ -f "./UHRIApp.swift" ] || echo 'import SwiftUI; @main struct UHRIApp: App { var body: some Scene { WindowGroup { ContentView() } } }' > ./UHRIApp.swift
-          cp ./UHRIApp.swift ./UHRI/UHRIApp.swift 2>/dev/null || true
-          cp ./UHRIApp.swift ./UHRI.swift 2>/dev/null || true
-          
-          # Fix Assets
-          mkdir -p Assets.xcassets/AppIcon.appiconset
-          echo '{"info":{"author":"xcode","version":1}}' > Assets.xcassets/Contents.json || true
-          echo '{"images":[{"idiom":"universal","platform":"ios","size":"1024x1024"}],"info":{"author":"xcode","version":1}}' > Assets.xcassets/AppIcon.appiconset/Contents.json || true
-          cp -R ./Assets.xcassets ./UHRI/Assets.xcassets 2>/dev/null || true
-          
-          ls -lh ./index.html ./UHRI/index.html ./Info.plist || true
-          
-          PROJECT=$(find . -name "*.xcodeproj" | head -n 1)
-          echo "Building $PROJECT"
-          xcodebuild -project "$PROJECT" -scheme UHRI -configuration Release -sdk iphoneos CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" || xcodebuild -project "$PROJECT" -target UHRI -configuration Release -sdk iphoneos CODE_SIGNING_ALLOWED=NO || true
-          
-          APP=$(find ~/Library/Developer/Xcode/DerivedData -name "*.app" -type d | head -n1)
-          if [ -z "$APP" ]; then APP=$(find . -name "*.app" -type d | head -n1); fi
-          echo "APP: $APP"
-          if [ -z "$APP" ]; then echo "No .app found, listing DerivedData"; ls -R ~/Library/Developer/Xcode/DerivedData | head -n 50; exit 1; fi
-          mkdir -p /tmp/Payload; rm -rf /tmp/Payload/*; cp -R "$APP" /tmp/Payload/
-          cd /tmp && rm -f UHRI-GREEN-FINAL-2MB.ipa && zip -r UHRI-GREEN-FINAL-2MB.ipa Payload
-          mkdir -p $CM_BUILD_DIR/build/ios/ipa; cp /tmp/UHRI-GREEN-FINAL-2MB.ipa $CM_BUILD_DIR/build/ios/ipa/
-          ls -lh $CM_BUILD_DIR/build/ios/ipa/
+          keychain initialize
+          app-store-connect fetch-signing-files "com.uhri.green" --type IOS_APP_STORE --create
+          keychain add-certificates
+          xcode-project use-profiles
+      - name: Build real IPA
+        script: |
+          xcode-project build-ipa --project "UHRI-14.xcodeproj" --scheme "UHRI-14"
     artifacts:
       - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
