@@ -1,3 +1,4 @@
+workflows:
   UHRI FINAL SIGNED:
     name: UHRI FINAL SIGNED
     max_build_duration: 60
