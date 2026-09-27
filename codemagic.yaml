@@ -1,18 +1,70 @@
 workflows:
   UHRI-GREEN-FINAL-REAL:
     name: UHRI GREEN FINAL REAL
-    max_build_duration: 60
     instance_type: mac_mini_m2
+    max_build_duration: 60
+    integrations:
+      app_store_connect: UHRI=14 New Key
     environment:
       xcode: latest
       cocoapods: default
     scripts:
-      - name: Build without signing (test compile)
+      - name: Create missing files
         script: |
-          set -x
-          echo "Testing if UHRI.xcodeproj compiles..."
-          xcodebuild -project "UHRI.xcodeproj" -scheme "UHRI" -sdk iphonesimulator -configuration Debug CODE_SIGNING_ALLOWED=NO build | tail -50
-          echo "=== BUILD TEST PASSED! Your app code is good! ==="
+          echo "Creating missing project files..."
+          # Create index.html that Xcode expects
+          echo "<html><body>UHRI</body></html>" > index.html || true
+          echo "<html><body>UHRI</body></html>" > UHRI/index.html || true
+          
+          # Ensure Assets exists
+          mkdir -p UHRI/Assets.xcassets/AppIcon.appiconset || true
+          if [ ! -f "UHRI/Assets.xcassets/Contents.json" ]; then
+            echo '{"info":{"author":"xcode","version":1}}' > UHRI/Assets.xcassets/Contents.json
+          fi
+          if [ ! -f "UHRI/Assets.xcassets/AppIcon.appiconset/Contents.json" ]; then
+            echo '{"images":[{"idiom":"universal","platform":"ios","size":"1024x1024"}]}' > UHRI/Assets.xcassets/AppIcon.appiconset/Contents.json
+          fi
+          
+          # Create Swift files if missing - REAL GREEN APP
+          if [ ! -f "UHRI/UHRIApp.swift" ]; then
+          cat > UHRI/UHRIApp.swift << 'SWIFT'
+          import SwiftUI
+          @main
+          struct UHRIApp: App {
+              var body: some Scene {
+                  WindowGroup {
+                      ContentView()
+                  }
+              }
+          }
+          SWIFT
+          fi
+          
+          if [ ! -f "UHRI/ContentView.swift" ]; then
+          cat > UHRI/ContentView.swift << 'SWIFT'
+          import SwiftUI
+          struct ContentView: View {
+              var body: some View {
+                  ZStack {
+                      Color.green.ignoresSafeArea()
+                      VStack {
+                          Text("UHRI").font(.largeTitle).bold().foregroundColor(.white)
+                          Text("GREEN BUILD WORKING").foregroundColor(.white)
+                      }
+                  }
+              }
+          }
+          SWIFT
+          fi
+          ls -la UHRI/
+      - name: Set up code signing with your UHRI=14 New Key
+        script: |
+          keychain initialize
+          app-store-connect fetch-signing-files "com.uhri.green" --type IOS_APP_STORE --create
+          keychain add-certificates
+          xcode-project use-profiles
+      - name: Build real GREEN IPA
+        script: |
+          xcode-project build-ipa --project "UHRI.xcodeproj" --scheme "UHRI"
     artifacts:
       - build/ios/ipa/*.ipa
-      - "*.log"
