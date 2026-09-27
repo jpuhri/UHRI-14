@@ -1,6 +1,6 @@
 workflows:
-  uhri-green-real:
-    name: UHRI GREEN REAL 2MB
+  uhri-green-final-real:
+    name: UHRI GREEN FINAL REAL
     instance_type: mac_mini_m2
     max_build_duration: 20
     environment:
@@ -18,10 +18,10 @@ workflows:
             var body: some View { 
               ZStack {
                 Color.green.ignoresSafeArea()
-                VStack {
+                VStack(spacing: 20) {
                   Text("UHRI").font(.system(size: 80)).bold().foregroundColor(.white)
-                  Text("GREEN BUILD 16").font(.title).foregroundColor(.white)
-                  Text("REAL IPA").font(.title2).bold().foregroundColor(.yellow)
+                  Text("FINAL GREEN").font(.title).foregroundColor(.white)
+                  Text("2.5 MB REAL").font(.title2).bold().foregroundColor(.yellow)
                 }
               }
             } 
@@ -39,7 +39,7 @@ workflows:
           <key>CFBundleExecutable</key><string>UHRI</string>
           <key>CFBundlePackageType</key><string>APPL</string>
           <key>CFBundleShortVersionString</key><string>1.0</string>
-          <key>CFBundleVersion</key><string>16</string>
+          <key>CFBundleVersion</key><string>17</string>
           <key>LSRequiresIPhoneOS</key><true/>
           </dict></plist>
           PLIST
@@ -65,24 +65,35 @@ workflows:
           C1 = {isa = XCConfigurationList; buildConfigurations = (C11, C12); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
           C01 = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CODE_SIGNING_ALLOWED = NO; }; name = Debug; };
           C02 = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CODE_SIGNING_ALLOWED = NO; }; name = Release; };
-          C11 = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGNING_ALLOWED = NO; INFOPLIST_FILE = Info.plist; PRODUCT_BUNDLE_IDENTIFIER = com.uhri.app; PRODUCT_NAME = UHRI; SWIFT_VERSION = 5.0; }; name = Debug; };
-          C12 = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGNING_ALLOWED = NO; INFOPLIST_FILE = Info.plist; PRODUCT_BUNDLE_IDENTIFIER = com.uhri.app; PRODUCT_NAME = UHRI; SWIFT_VERSION = 5.0; }; name = Release; };
+          C11 = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGNING_ALLOWED = NO; CODE_SIGNING_REQUIRED = NO; CODE_SIGN_IDENTITY = ""; INFOPLIST_FILE = Info.plist; PRODUCT_BUNDLE_IDENTIFIER = com.uhri.app; PRODUCT_NAME = UHRI; SWIFT_VERSION = 5.0; }; name = Debug; };
+          C12 = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGNING_ALLOWED = NO; CODE_SIGNING_REQUIRED = NO; CODE_SIGN_IDENTITY = ""; INFOPLIST_FILE = Info.plist; PRODUCT_BUNDLE_IDENTIFIER = com.uhri.app; PRODUCT_NAME = UHRI; SWIFT_VERSION = 5.0; }; name = Release; };
           }; rootObject = P0; }
           PBX
-      - name: Build REAL IPA
+      - name: Build REAL IPA - FIXED
         script: |
-          echo "Building UHRI..."
-          xcodebuild -project UHRI.xcodeproj -target UHRI -configuration Release -sdk iphoneos -derivedDataPath build SYMROOT=build/Build/Products CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
-          echo "Build finished, searching for .app..."
-          find build -name "UHRI.app" -type d
-          APP_PATH=$(find build -name "UHRI.app" -type d | head -1)
-          echo "Found APP at: $APP_PATH"
+          set -e
+          echo "=== BUILDING WITHOUT derivedDataPath ==="
+          rm -rf build
+          xcodebuild -project UHRI.xcodeproj -target UHRI -configuration Release -sdk iphoneos CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build
+          echo "=== SEARCHING FOR APP ==="
+          find . -name "UHRI.app" -type d
+          APP_PATH=$(find . -name "UHRI.app" -type d | head -1)
+          echo "APP_PATH = $APP_PATH"
+          if [ -z "$APP_PATH" ]; then
+            echo "ERROR: No UHRI.app found!"
+            find . -type d -name "*.app"
+            exit 1
+          fi
+          echo "=== CREATING IPA ==="
           mkdir -p build/ipa/Payload
-          cp -r "$APP_PATH" build/ipa/Payload/
+          rm -rf build/ipa/Payload/*
+          cp -R "$APP_PATH" build/ipa/Payload/
+          ls -lh build/ipa/Payload/
           cd build/ipa
-          zip -r -y UHRI-GREEN-BUILD-16-REAL.ipa Payload
+          zip -r -y UHRI-GREEN-FINAL-REAL-2MB.ipa Payload
+          echo "=== IPA SIZE ==="
           ls -lh *.ipa
-          echo "SUCCESS - REAL IPA SIZE:"
           du -h *.ipa
+          echo "REAL BUILD DONE!"
     artifacts:
       - "build/ipa/*.ipa"
