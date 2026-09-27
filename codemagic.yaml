@@ -15,6 +15,6 @@ workflows:
           xcode-project use-profiles
       - name: Build real IPA
         script: |
-          xcode-project build-ipa --project "UHRI-14.xcodeproj" --scheme "UHRI-14"
+          xcode-project build-ipa --project "UHRI.xcodeproj" --scheme "UHRI-14"
     artifacts:
       - build/ios/ipa/*.ipa
