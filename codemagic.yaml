@@ -9,12 +9,17 @@ workflows:
     scripts:
       - name: Set up code signing
         script: |
+          set -e
+          set -x
           keychain initialize
           app-store-connect fetch-signing-files "com.uhri.green" --type IOS_APP_STORE --create
           keychain add-certificates
-          xcode-project use-profiles
+          xcode-project use-profiles --warn-only
+          echo "=== PROFILES APPLIED ==="
+          ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ || true
       - name: Build real IPA
         script: |
-          xcode-project build-ipa --project "UHRI.xcodeproj" --scheme "UHRI"
+          set -x
+          xcode-project build-ipa --project "UHRI.xcodeproj" --scheme "UHRI" --verbose
     artifacts:
       - build/ios/ipa/*.ipa
