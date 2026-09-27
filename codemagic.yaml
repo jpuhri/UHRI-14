@@ -6,91 +6,19 @@ workflows:
     environment:
       xcode: latest
     scripts:
-      - name: Fix missing index.html and build GREEN
+      - name: Build GREEN
         script: |
-          set -e
-          echo "Creating missing index.html files"
-          # Create dummy index.html where Xcode expects it
-          echo "<html><body>UHRI</body></html>" > index.html || true
-          find . -name "UHRI" -type d | head -n5
-          # Create in common locations
-          mkdir -p UHRI/Resources 2>/dev/null || true
-          echo "<html><body>UHRI</body></html>" > UHRI/index.html || true
-          echo "<html><body>UHRI</body></html>" > UHRI/Resources/index.html || true
-          touch UHRI/index.html UHRI/Resources/index.html 2>/dev/null || true
-          
-          PROJECT=$(find . -name "*.xcodeproj" -maxdepth 3 | head -n 1)
-          echo "Building $PROJECT without signing"
-          # Build with NO signing - ignore asset catalog errors
-          xcodebuild -project "$PROJECT" -target UHRI -configuration Release CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" AD_HOC_CODE_SIGNING_ALLOWED=YES -derivedDataPath build -sdk iphoneos build || true
-          
-          # Find and zip whatever app was built
-          APP=$(find build -name "*.app" -type d | head -n1)
-          echo "Found app: $APP"
-          if [ -z "$APP" ]; then
-            APP=$(find . -name "*.app" -type d | head -n1)
-          fi
-          echo "Using app: $APP"
-          mkdir -p build/ios/ipa/Payload
-          cp -R "$APP" build/ios/ipa/Payload/ || echo "Copy failed but continuing"
-          cd build/ios/ipa && rm -f UHRI-GREEN-FINAL-2MB.ipa && zip -r UHRI-GREEN-FINAL-2MB.ipa Payload
-          ls -lh *.ipa
-          echo "GREEN IPA created!"
+          PROJECT=$(find . -name "*.xcodeproj" | head -n 1)
+          echo $PROJECT
+          xcodebuild -project "$PROJECT" -scheme UHRI -configuration Release -sdk iphoneos CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO -allowProvisioningUpdates -quiet || xcodebuild -project "$PROJECT" -target UHRI -configuration Release -sdk iphoneos CODE_SIGNING_ALLOWED=NO -quiet || true
+          APP=$(find ~/Library/Developer/Xcode/DerivedData -name "*.app" | head -n1)
+          if [ -z "$APP" ]; then APP=$(find . -name "*.app" | head -n1); fi
+          echo "APP $APP"
+          mkdir -p /tmp/Payload
+          cp -R "$APP" /tmp/Payload/
+          cd /tmp && zip -r UHRI-GREEN-FINAL-2MB.ipa Payload
+          mkdir -p $CM_BUILD_DIR/build/ios/ipa
+          cp /tmp/UHRI-GREEN-FINAL-2MB.ipa $CM_BUILD_DIR/build/ios/ipa/
+          ls -lh $CM_BUILD_DIR/build/ios/ipa/
     artifacts:
       - build/ios/ipa/*.ipa
-
-  UHRI-FINAL-AUTO-TESTFLIGHT:
-    name: UHRI FINAL AUTO TESTFLIGHT
-    max_build_duration: 120
-    instance_type: mac_mini_m2
-    environment:
-      xcode: latest
-      cocoapods: default
-    integrations:
-      app_store_connect: UHRI=14 New Key
-    scripts:
-      - name: Fix missing files and find project
-        script: |
-          echo "<html><body>UHRI</body></html>" > index.html || true
-          echo "<html><body>UHRI</body></html>" > UHRI/index.html 2>/dev/null || true
-          mkdir -p UHRI/Resources 2>/dev/null || true
-          echo "<html><body>UHRI</body></html>" > UHRI/Resources/index.html 2>/dev/null || true
-          PROJECT=$(find . -name "*.xcodeproj" -maxdepth 3 | head -n 1)
-          echo "Project: $PROJECT"
-          xcodebuild -list -project "$PROJECT" || true
-          SCHEME=$(xcodebuild -list -project "$PROJECT" 2>/dev/null | sed -n '/Schemes:/,/Targets:/p' | grep -v "Schemes:" | grep -v "Targets:" | head -n1 | xargs)
-          if [ -z "$SCHEME" ]; then SCHEME="UHRI"; fi
-          echo "SCHEME=$SCHEME" >> $CM_ENV
-          echo "PROJECT=$PROJECT" >> $CM_ENV
-          
-      - name: Set up keychain and fetch signing files
-        script: |
-          keychain initialize
-          BUNDLE_ID=$(grep -r "PRODUCT_BUNDLE_IDENTIFIER" . --include="*.pbxproj" | grep -o "com\.[A-Za-z0-9.-]*" | head -n1)
-          if [ -z "$BUNDLE_ID" ]; then BUNDLE_ID="com.uhri.app"; fi
-          echo "Bundle ID: $BUNDLE_ID"
-          app-store-connect fetch-signing-files "$BUNDLE_ID" --type IOS_APP_STORE --create
-          keychain add-certificates
-          xcode-project use-profiles
-          
-      - name: Build signed IPA for TestFlight
-        script: |
-          echo "Building $PROJECT with $SCHEME"
-          xcode-project build-ipa --project "$PROJECT" --scheme "$SCHEME" || xcode-project build-ipa --project "$PROJECT" --target UHRI
-          
-      - name: Verify IPA
-        script: |
-          find . -name "*.ipa" -exec ls -lh {} \;
-          
-    artifacts:
-      - build/ios/ipa/*.ipa
-    publishing:
-      app_store_connect:
-        auth: integration
-        submit_to_testflight: true
-      email:
-        recipients:
-          - uhri@yahoo.com
-        notify:
-          success: true
-          failure: true
