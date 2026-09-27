@@ -58,21 +58,25 @@ workflows:
           S0 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A1, A2); runOnlyForDeploymentPostprocessing = 0; };
           C0 = {isa = XCConfigurationList; buildConfigurations = (C01, C02); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
           C1 = {isa = XCConfigurationList; buildConfigurations = (C11, C12); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
-          C01 = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ANALYZER_NONNULL = YES; CODE_SIGNING_ALLOWED = NO; }; name = Debug; };
-          C02 = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ANALYZER_NONNULL = YES; CODE_SIGNING_ALLOWED = NO; }; name = Release; };
-          C11 = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGNING_ALLOWED = NO; INFOPLIST_FILE = Info.plist; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks"; PRODUCT_BUNDLE_IDENTIFIER = com.uhri.app; PRODUCT_NAME = UHRI; SWIFT_VERSION = 5.0; }; name = Debug; };
-          C12 = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGNING_ALLOWED = NO; INFOPLIST_FILE = Info.plist; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks"; PRODUCT_BUNDLE_IDENTIFIER = com.uhri.app; PRODUCT_NAME = UHRI; SWIFT_VERSION = 5.0; }; name = Release; };
+          C01 = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ANALYZER_NONNULL = YES; CODE_SIGN_STYLE = Automatic; }; name = Debug; };
+          C02 = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ANALYZER_NONNULL = YES; CODE_SIGN_STYLE = Automatic; }; name = Release; };
+          C11 = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_STYLE = Automatic; INFOPLIST_FILE = Info.plist; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks"; PRODUCT_BUNDLE_IDENTIFIER = com.uhri.app; PRODUCT_NAME = UHRI; SWIFT_VERSION = 5.0; }; name = Debug; };
+          C12 = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_STYLE = Automatic; INFOPLIST_FILE = Info.plist; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks"; PRODUCT_BUNDLE_IDENTIFIER = com.uhri.app; PRODUCT_NAME = UHRI; SWIFT_VERSION = 5.0; }; name = Release; };
           }; rootObject = P0; }
           PBX
-      - name: Build IPA
+      - name: Create Bundle ID automatically
         script: |
-          xcodebuild -project UHRI.xcodeproj -target UHRI -configuration Release archive -archivePath build/UHRI.xcarchive CODE_SIGNING_ALLOWED=NO
-          mkdir -p build/ipa/Payload
-          cp -r build/UHRI.xcarchive/Products/Applications/UHRI.app build/ipa/Payload/
-          cd build/ipa && zip -r UHRI-REAL-10MB.ipa Payload
-          ls -lh UHRI-REAL-10MB.ipa
+          echo "Creating Bundle ID com.uhri.app in Apple..."
+          app-store-connect fetch-signing-files com.uhri.app --type IOS_APP_STORE --create || echo "Will create automatically"
+      - name: Build IPA with automatic signing
+        script: |
+          xcode-project use-profiles
+          xcode-project build-ipa --archive-flags="CODE_SIGN_STYLE=Automatic"
+          ls -lh build/ios/ipa/*.ipa || ls -lh *.ipa || ls -lh build/ipa/*.ipa
     artifacts:
+      - build/ios/ipa/*.ipa
       - build/ipa/*.ipa
+      - *.ipa
     publishing:
       app_store_connect:
         auth: integration
