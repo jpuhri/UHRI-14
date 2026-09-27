@@ -1,6 +1,6 @@
 workflows:
-  uhri-green-simple:
-    name: UHRI GREEN SIMPLE
+  uhri-green-real:
+    name: UHRI GREEN REAL 2MB
     instance_type: mac_mini_m2
     max_build_duration: 20
     environment:
@@ -8,7 +8,6 @@ workflows:
     scripts:
       - name: Create Project
         script: |
-          rm -rf UHRI.xcodeproj
           cat > UHRIApp.swift << 'SWIFT'
           import SwiftUI
           @main struct UHRIApp: App { var body: some Scene { WindowGroup { ContentView() } } }
@@ -17,10 +16,14 @@ workflows:
           import SwiftUI
           struct ContentView: View { 
             var body: some View { 
-              VStack {
-                Text("UHRI").font(.largeTitle).bold().foregroundColor(.green)
-                Text("BUILD 15 - GREEN").font(.title2)
-              }.padding()
+              ZStack {
+                Color.green.ignoresSafeArea()
+                VStack {
+                  Text("UHRI").font(.system(size: 80)).bold().foregroundColor(.white)
+                  Text("GREEN BUILD 16").font(.title).foregroundColor(.white)
+                  Text("REAL IPA").font(.title2).bold().foregroundColor(.yellow)
+                }
+              }
             } 
           }
           SWIFT
@@ -36,7 +39,7 @@ workflows:
           <key>CFBundleExecutable</key><string>UHRI</string>
           <key>CFBundlePackageType</key><string>APPL</string>
           <key>CFBundleShortVersionString</key><string>1.0</string>
-          <key>CFBundleVersion</key><string>15</string>
+          <key>CFBundleVersion</key><string>16</string>
           <key>LSRequiresIPhoneOS</key><true/>
           </dict></plist>
           PLIST
@@ -55,24 +58,31 @@ workflows:
           D1 = {isa = PBXGroup; children = (D0, D2); sourceTree = "<group>"; };
           D2 = {isa = PBXGroup; children = (F0); name = Products; sourceTree = "<group>"; };
           T0 = {isa = PBXNativeTarget; buildConfigurationList = C1; buildPhases = (S0, BF, R0); buildRules = (); dependencies = (); name = UHRI; productName = UHRI; productReference = F0; productType = "com.apple.product-type.application"; };
-          P0 = {isa = PBXProject; attributes = {BuildIndependentTargetsInParallel = 1; LastSwiftUpdateCheck = 1500; ORGANIZATIONNAME = uhri; TargetAttributes = { T0 = { CreatedOnToolsVersion = 15.0; }; }; }; buildConfigurationList = C0; compatibilityVersion = "Xcode 14.0"; developmentRegion = en; hasScannedForEncodings = 0; knownRegions = (en, Base); mainGroup = D1; productRefGroup = D2; projectDirPath = ""; projectRoot = ""; targets = (T0); };
+          P0 = {isa = PBXProject; attributes = {BuildIndependentTargetsInParallel = 1; LastSwiftUpdateCheck = 1500; TargetAttributes = { T0 = { CreatedOnToolsVersion = 15.0; }; }; }; buildConfigurationList = C0; compatibilityVersion = "Xcode 14.0"; developmentRegion = en; hasScannedForEncodings = 0; knownRegions = (en, Base); mainGroup = D1; productRefGroup = D2; projectDirPath = ""; projectRoot = ""; targets = (T0); };
           R0 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (A3); runOnlyForDeploymentPostprocessing = 0; };
           S0 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A1, A2); runOnlyForDeploymentPostprocessing = 0; };
           C0 = {isa = XCConfigurationList; buildConfigurations = (C01, C02); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
           C1 = {isa = XCConfigurationList; buildConfigurations = (C11, C12); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
-          C01 = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ANALYZER_NONNULL = YES; CODE_SIGNING_ALLOWED = NO; }; name = Debug; };
-          C02 = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ANALYZER_NONNULL = YES; CODE_SIGNING_ALLOWED = NO; }; name = Release; };
-          C11 = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGNING_ALLOWED = NO; INFOPLIST_FILE = Info.plist; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks"; PRODUCT_BUNDLE_IDENTIFIER = com.uhri.app; PRODUCT_NAME = UHRI; SWIFT_VERSION = 5.0; }; name = Debug; };
-          C12 = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGNING_ALLOWED = NO; INFOPLIST_FILE = Info.plist; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks"; PRODUCT_BUNDLE_IDENTIFIER = com.uhri.app; PRODUCT_NAME = UHRI; SWIFT_VERSION = 5.0; }; name = Release; };
+          C01 = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CODE_SIGNING_ALLOWED = NO; }; name = Debug; };
+          C02 = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CODE_SIGNING_ALLOWED = NO; }; name = Release; };
+          C11 = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGNING_ALLOWED = NO; INFOPLIST_FILE = Info.plist; PRODUCT_BUNDLE_IDENTIFIER = com.uhri.app; PRODUCT_NAME = UHRI; SWIFT_VERSION = 5.0; }; name = Debug; };
+          C12 = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGNING_ALLOWED = NO; INFOPLIST_FILE = Info.plist; PRODUCT_BUNDLE_IDENTIFIER = com.uhri.app; PRODUCT_NAME = UHRI; SWIFT_VERSION = 5.0; }; name = Release; };
           }; rootObject = P0; }
           PBX
-      - name: Build IPA
+      - name: Build REAL IPA
         script: |
-          xcodebuild -project UHRI.xcodeproj -target UHRI -configuration Release archive -archivePath build/UHRI.xcarchive CODE_SIGNING_ALLOWED=NO
+          echo "Building UHRI..."
+          xcodebuild -project UHRI.xcodeproj -target UHRI -configuration Release -sdk iphoneos -derivedDataPath build SYMROOT=build/Build/Products CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
+          echo "Build finished, searching for .app..."
+          find build -name "UHRI.app" -type d
+          APP_PATH=$(find build -name "UHRI.app" -type d | head -1)
+          echo "Found APP at: $APP_PATH"
           mkdir -p build/ipa/Payload
-          cp -r build/UHRI.xcarchive/Products/Applications/UHRI.app build/ipa/Payload/
-          cd build/ipa && zip -r UHRI-GREEN-BUILD-15.ipa Payload
-          ls -lh UHRI-GREEN-BUILD-15.ipa
-          echo "GREEN BUILD SUCCESS!"
+          cp -r "$APP_PATH" build/ipa/Payload/
+          cd build/ipa
+          zip -r -y UHRI-GREEN-BUILD-16-REAL.ipa Payload
+          ls -lh *.ipa
+          echo "SUCCESS - REAL IPA SIZE:"
+          du -h *.ipa
     artifacts:
       - "build/ipa/*.ipa"
