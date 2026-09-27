@@ -5,11 +5,6 @@ workflows:
     instance_type: mac_mini_m2
     environment:
       xcode: latest
-      bundle_identifier: com.uhri.app
-    # IMPORTANT: Connect App Store Connect in Codemagic dashboard first
-    # Codemagic → Teams → Integrations → App Store Connect → Add key
-    integrations:
-      app_store_connect: UHRI-Key
     scripts:
       - name: Fix files (same fix that gives 14.66 KB SUCCESS)
         script: |
@@ -25,7 +20,6 @@ workflows:
             <key>CFBundleShortVersionString</key><string>1.0</string>
             <key>CFBundleVersion</key><string>1</string>
             <key>LSRequiresIPhoneOS</key><true/>
-            <key>UILaunchStoryboardName</key><string>LaunchScreen</string>
           </dict></plist>
           PLIST
           fi
@@ -39,31 +33,27 @@ workflows:
           echo '{"info":{"author":"xcode","version":1}}' > Assets.xcassets/Contents.json || true
           echo '{"images":[{"idiom":"universal","platform":"ios","size":"1024x1024"}],"info":{"author":"xcode","version":1}}' > Assets.xcassets/AppIcon.appiconset/Contents.json || true
           cp -R ./Assets.xcassets ./UHRI/ 2>/dev/null || true
-          
+
       - name: Set up signing
         script: |
           keychain initialize
-          app-store-connect fetch-signing-files "$BUNDLE_ID" --type IOS_APP_STORE --create
+          app-store-connect fetch-signing-files com.uhri.app --type IOS_APP_STORE --create
           keychain add-certificates
           xcode-project use-profiles
-          
-      - name: Build SIGNED IPA for App Store
+
+      - name: Build SIGNED IPA
         script: |
           PROJECT=$(find . -name "*.xcodeproj" | head -n 1)
-          xcode-project detect
           xcodebuild -project "$PROJECT" -scheme UHRI -configuration Release -sdk iphoneos -archivePath /tmp/UHRI.xcarchive archive
-          xcodebuild -exportArchive -archivePath /tmp/UHRI.xcarchive -exportPath /tmp/export -exportOptionsPlist /tmp/export.plist || {
-            cat > /tmp/export.plist << 'EXP'
+          cat > /tmp/ExportOptions.plist << 'EXP'
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0"><dict>
             <key>method</key><string>app-store</string>
             <key>signingStyle</key><string>automatic</string>
-            <key>teamID</key><string>$(TEAM_ID)</string>
           </dict></plist>
           EXP
-            xcodebuild -exportArchive -archivePath /tmp/UHRI.xcarchive -exportPath /tmp/export -exportOptionsPlist /tmp/export.plist
-          }
+          xcodebuild -exportArchive -archivePath /tmp/UHRI.xcarchive -exportPath /tmp/export -exportOptionsPlist /tmp/ExportOptions.plist
           IPA=$(find /tmp/export -name "*.ipa" | head -n1)
           echo "SIGNED IPA: $IPA"
           ls -lh "$IPA"
@@ -75,5 +65,3 @@ workflows:
       app_store_connect:
         auth: integration
         submit_to_testflight: true
-        beta_groups:
-          - UHRI Beta
